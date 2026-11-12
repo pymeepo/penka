@@ -1,0 +1,106 @@
+---
+import '@fontsource-variable/manrope';
+import '@fontsource-variable/unbounded';
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import DemoNotice from '../components/DemoNotice.astro';
+import { url } from '../lib/url';
+
+interface Props {
+  /** Page title without the brand suffix. Omit on the home page. */
+  title?: string;
+  description: string;
+  /** Absolute or base-relative path to an OG image; defaults to /og.png. */
+  ogImage?: string;
+  ogType?: 'website' | 'article';
+  noindex?: boolean;
+  /** Extra classes for <main>. */
+  mainClass?: string;
+}
+
+const { title, description, ogImage, ogType = 'website', noindex = false, mainClass } = Astro.props;
+
+const brand = 'Пенка';
+const fullTitle = title ? `${title} — ${brand}` : `${brand} — кофейни у дома`;
+const site = Astro.site ?? new URL('http://localhost:4321');
+const canonical = new URL(Astro.url.pathname, site).href;
+const ogImageUrl = new URL(ogImage ?? url('og.png'), site).href;
+---
+
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <script is:inline>
+      // App mode: WebView user agent contains "PenkaApp", or the shell adds html.in-app itself.
+      // For demos: ?app=1 turns app mode on for this tab, ?app=0 turns it off.
+      (function () {
+        var d = document.documentElement;
+        try {
+          var q = new URLSearchParams(location.search).get('app');
+          if (q === '1') sessionStorage.setItem('penka:in-app', '1');
+          if (q === '0') sessionStorage.removeItem('penka:in-app');
+          if (navigator.userAgent.indexOf('PenkaApp') !== -1 || sessionStorage.getItem('penka:in-app') === '1') {
+            d.classList.add('in-app');
+          }
+        } catch (e) {
+          if (navigator.userAgent.indexOf('PenkaApp') !== -1) d.classList.add('in-app');
+        }
+      })();
+    </script>
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+
+    <meta name="theme-color" content="#C8875B" />
+    <link rel="manifest" href={url('manifest.webmanifest')} />
+    <link rel="icon" href={url('favicon.svg')} type="image/svg+xml" />
+    <link rel="apple-touch-icon" href={url('icons/apple-touch-icon.png')} />
+    <meta name="apple-mobile-web-app-title" content={brand} />
+    <meta name="format-detection" content="telephone=no" />
+
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content={brand} />
+    <meta property="og:locale" content="ru_RU" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <slot name="head" />
+  </head>
+  <body>
+    <a
+      href="#main"
+      class="sr-only z-50 rounded-full bg-ink px-4 py-2 text-cream focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
+      >Перейти к содержимому</a
+    >
+    <Header />
+    <main id="main" class:list={['min-h-[60vh]', mainClass]}>
+      <slot />
+    </main>
+    <div class="app-only container-page pt-2 pb-6">
+      <DemoNotice />
+    </div>
+    <Footer />
+
+    <script>
+      import { onCartChange, syncCartBadges } from '../lib/cart';
+
+      syncCartBadges();
+      onCartChange(() => syncCartBadges(true));
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  .app-only {
+    display: none;
+  }
+  .in-app .app-only {
+    display: block;
+  }
+</style>

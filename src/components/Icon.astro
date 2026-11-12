@@ -1,0 +1,100 @@
+---
+// Inline SVG icons from lucide-static (ISC). Add an icon: import it below and add it to `icons`.
+import arrowRight from 'lucide-static/icons/arrow-right.svg?raw';
+import briefcase from 'lucide-static/icons/briefcase.svg?raw';
+import calendar from 'lucide-static/icons/calendar.svg?raw';
+import check from 'lucide-static/icons/check.svg?raw';
+import chevronLeft from 'lucide-static/icons/chevron-left.svg?raw';
+import clock from 'lucide-static/icons/clock.svg?raw';
+import coffee from 'lucide-static/icons/coffee.svg?raw';
+import copy from 'lucide-static/icons/copy.svg?raw';
+import download from 'lucide-static/icons/download.svg?raw';
+import fileText from 'lucide-static/icons/file-text.svg?raw';
+import gift from 'lucide-static/icons/gift.svg?raw';
+import house from 'lucide-static/icons/house.svg?raw';
+import image from 'lucide-static/icons/image.svg?raw';
+import logOut from 'lucide-static/icons/log-out.svg?raw';
+import mail from 'lucide-static/icons/mail.svg?raw';
+import mapPin from 'lucide-static/icons/map-pin.svg?raw';
+import minus from 'lucide-static/icons/minus.svg?raw';
+import navigation from 'lucide-static/icons/navigation.svg?raw';
+import paperclip from 'lucide-static/icons/paperclip.svg?raw';
+import pencil from 'lucide-static/icons/pencil.svg?raw';
+import percent from 'lucide-static/icons/percent.svg?raw';
+import phone from 'lucide-static/icons/phone.svg?raw';
+import plus from 'lucide-static/icons/plus.svg?raw';
+import send from 'lucide-static/icons/send.svg?raw';
+import share2 from 'lucide-static/icons/share-2.svg?raw';
+import shoppingBag from 'lucide-static/icons/shopping-bag.svg?raw';
+import smartphone from 'lucide-static/icons/smartphone.svg?raw';
+import tag from 'lucide-static/icons/tag.svg?raw';
+import trash2 from 'lucide-static/icons/trash-2.svg?raw';
+import user from 'lucide-static/icons/user.svg?raw';
+import x from 'lucide-static/icons/x.svg?raw';
+
+const icons = {
+  'arrow-right': arrowRight,
+  'briefcase': briefcase,
+  'calendar': calendar,
+  'check': check,
+  'chevron-left': chevronLeft,
+  'clock': clock,
+  'coffee': coffee,
+  'copy': copy,
+  'download': download,
+  'file-text': fileText,
+  'gift': gift,
+  'house': house,
+  'image': image,
+  'log-out': logOut,
+  'mail': mail,
+  'map-pin': mapPin,
+  'minus': minus,
+  'navigation': navigation,
+  'paperclip': paperclip,
+  'pencil': pencil,
+  'percent': percent,
+  'phone': phone,
+  'plus': plus,
+  'send': send,
+  'share-2': share2,
+  'shopping-bag': shoppingBag,
+  'smartphone': smartphone,
+  'tag': tag,
+  'trash-2': trash2,
+  'user': user,
+  'x': x,
+} as const;
+
+export type IconName = keyof typeof icons;
+
+interface Props {
+  name: IconName;
+  size?: number;
+  class?: string;
+  strokeWidth?: number;
+  /** Accessible label; without it the icon is decorative (aria-hidden). */
+  label?: string;
+}
+
+const { name, size = 20, class: className, strokeWidth = 2, label } = Astro.props;
+// Keep only the shapes: drop the license comment and the source <svg> wrapper.
+const inner = icons[name].replace(/<!--[\s\S]*?-->/g, '').replace(/^[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '').trim();
+---
+
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width={size}
+  height={size}
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width={strokeWidth}
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  class:list={['shrink-0', className]}
+  aria-hidden={label ? undefined : 'true'}
+  role={label ? 'img' : undefined}
+  aria-label={label}
+  focusable="false"
+><Fragment set:html={inner} /></svg>

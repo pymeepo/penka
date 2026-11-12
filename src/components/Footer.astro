@@ -1,0 +1,61 @@
+---
+import DemoNotice from './DemoNotice.astro';
+import Logo from './Logo.astro';
+import { url } from '../lib/url';
+import { CONTACT_EMAIL } from '../data/locations';
+
+const columns = [
+  {
+    title: 'Кофейня',
+    links: [
+      { href: url('menu'), label: 'Меню' },
+      { href: url('promo'), label: 'Акции' },
+      { href: url('files/menu.pdf'), label: 'Меню в PDF' },
+    ],
+  },
+  {
+    title: 'О нас',
+    links: [
+      { href: url('contacts'), label: 'Адреса и контакты' },
+      { href: url('jobs'), label: 'Работа у нас' },
+      { href: url('account'), label: 'Профиль' },
+    ],
+  },
+];
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer mt-16 bg-ink text-cream">
+  <div class="container-page grid gap-10 py-12 md:grid-cols-[1.4fr_1fr_1fr]">
+    <div class="space-y-4">
+      <Logo class="h-9 text-cream" />
+      <p class="max-w-xs text-cream/75">Три кофейни у дома. Варим, печём и ждём в гости с 7:30.</p>
+      <a class="inline-block font-semibold text-cream underline decoration-cream/40" href={`mailto:${CONTACT_EMAIL}`}>
+        {CONTACT_EMAIL}
+      </a>
+    </div>
+    {
+      columns.map((col) => (
+        <nav aria-label={col.title}>
+          <h2 class="mb-3 font-sans text-sm font-bold tracking-wide text-cream/60 uppercase">{col.title}</h2>
+          <ul class="space-y-2">
+            {col.links.map((l) => (
+              <li>
+                <a class="inline-block py-1 font-semibold text-cream hover:underline" href={l.href}>
+                  {l.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      ))
+    }
+  </div>
+  <div class="container-page space-y-4 border-t border-cream/10 py-6 text-sm text-cream/70">
+    <DemoNotice tone="dark" />
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <span>© {year} «Пенка». Демо для портфолио.</span>
+      <a class="font-semibold text-cream underline decoration-cream/40" href={url('privacy')}>Политика конфиденциальности</a>
+    </div>
+  </div>
+</footer>

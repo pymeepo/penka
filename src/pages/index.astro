@@ -1,0 +1,44 @@
+---
+// Phase 1 placeholder: checks the layout, fonts and tokens. The real home page comes in phase 2.
+import { Image } from 'astro:assets';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import DemoNotice from '../components/DemoNotice.astro';
+import Icon from '../components/Icon.astro';
+import { getImage } from '../lib/images';
+import { url } from '../lib/url';
+
+const hero = await getImage('hero');
+---
+
+<BaseLayout description="Три кофейни «Пенка» у дома: кофе, выпечка и завтраки. Закажите к приходу — заберёте без очереди.">
+  <section class="container-page py-8 md:py-14">
+    <div class="card overflow-hidden">
+      <Image
+        src={hero}
+        alt="Утро в кофейне «Пенка»"
+        widths={[400, 800, 1200]}
+        sizes="(min-width: 1200px) 1200px, 100vw"
+        class="aspect-[16/10] w-full object-cover"
+        loading="eager"
+        fetchpriority="high"
+      />
+      <div class="space-y-4 p-6 md:p-10">
+        <p class="eyebrow">Каркас · фаза 1</p>
+        <h1 class="text-3xl leading-tight md:text-5xl">Кофе с пенкой и без спешки</h1>
+        <p class="max-w-prose text-lg text-muted">
+          Здесь будет главная. Пока страница проверяет шрифты Manrope и Unbounded, палитру, шапку, подвал и режим
+          приложения.
+        </p>
+        <div class="flex flex-wrap gap-3">
+          <a href={url('menu')} class="btn btn-primary">
+            Заказать к приходу
+            <Icon name="arrow-right" />
+          </a>
+          <a href={url('?app=1')} class="btn btn-ghost">Режим приложения</a>
+          <a href={url('?app=0')} class="btn btn-ghost">Обычный сайт</a>
+        </div>
+      </div>
+    </div>
+    <DemoNotice class="mt-6" />
+  </section>
+</BaseLayout>

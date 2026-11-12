@@ -1,0 +1,99 @@
+---
+// Site header (sticky) + mobile tab bar. Both are hidden in app mode (html.in-app),
+// but .cart-count stays in the DOM so the native shell can read the number.
+import Icon, { type IconName } from './Icon.astro';
+import Logo from './Logo.astro';
+import { url } from '../lib/url';
+
+interface NavItem {
+  href: string;
+  label: string;
+  icon: IconName;
+  /** Path prefix (relative to base) that marks the item active. */
+  match: string;
+}
+
+const nav: NavItem[] = [
+  { href: url('menu'), label: 'Меню', icon: 'coffee', match: 'menu' },
+  { href: url('promo'), label: 'Акции', icon: 'percent', match: 'promo' },
+  { href: url('contacts'), label: 'Кофейни', icon: 'map-pin', match: 'contacts' },
+  { href: url('account'), label: 'Профиль', icon: 'user', match: 'account' },
+];
+
+const tabs: NavItem[] = [{ href: url(), label: 'Главная', icon: 'house', match: '' }, ...nav];
+
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const current = Astro.url.pathname.startsWith(base) ? Astro.url.pathname.slice(base.length) : Astro.url.pathname;
+const isActive = (match: string): boolean =>
+  match === '' ? current === '' || current === '/' : current === match || current.startsWith(`${match}/`);
+const cartActive = isActive('cart') || isActive('order');
+---
+
+<header class="site-header sticky top-0 z-40 border-b border-ink/5 bg-cream/85 backdrop-blur-md">
+  <div class="container-page flex h-[var(--header-h)] items-center justify-between gap-4">
+    <a href={url()} class="-ml-1 rounded-xl p-1 text-ink" aria-label="Пенка — на главную">
+      <Logo class="h-8 sm:h-9" />
+    </a>
+
+    <nav aria-label="Основное меню" class="hidden md:block">
+      <ul class="flex items-center gap-1">
+        {
+          nav.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                aria-current={isActive(item.match) ? 'page' : undefined}
+                class:list={[
+                  'rounded-full px-4 py-2 font-semibold transition-colors hover:bg-ink/5',
+                  isActive(item.match) && 'bg-ink/5 text-caramel-deep',
+                ]}
+              >
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <a
+      href={url('cart')}
+      data-cart-label
+      aria-label="Корзина"
+      aria-current={cartActive ? 'page' : undefined}
+      class="relative inline-flex size-12 items-center justify-center rounded-full bg-card shadow-[var(--shadow-soft)] transition-transform active:scale-95"
+    >
+      <Icon name="shopping-bag" size={22} />
+      <span
+        class="cart-count absolute -top-0.5 -right-0.5 grid min-w-5 place-items-center rounded-full bg-caramel px-1 text-xs leading-5 font-bold text-ink data-[count='0']:hidden"
+        data-count="0"
+        aria-hidden="true">0</span
+      >
+    </a>
+  </div>
+</header>
+
+<nav
+  aria-label="Разделы"
+  class="site-tabbar fixed inset-x-0 bottom-0 z-40 border-t border-ink/10 bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
+>
+  <ul class="grid h-[var(--tabbar-h)] grid-cols-5">
+    {
+      tabs.map((item) => (
+        <li>
+          <a
+            href={item.href}
+            aria-current={isActive(item.match) ? 'page' : undefined}
+            class:list={[
+              'flex h-full flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-colors',
+              isActive(item.match) ? 'text-caramel-deep' : 'text-muted',
+            ]}
+          >
+            <Icon name={item.icon} size={22} strokeWidth={isActive(item.match) ? 2.25 : 1.75} />
+            {item.label}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
