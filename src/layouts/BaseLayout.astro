@@ -87,6 +87,18 @@ const ogImageUrl = new URL(ogImage ?? url('og.png'), site).href;
     </div>
     <Footer />
 
+    <div
+      id="toast"
+      role="status"
+      aria-live="polite"
+      data-show="false"
+      class="toast pointer-events-none fixed inset-x-0 z-50 flex justify-center px-4 transition-[opacity,transform] duration-300 ease-[var(--ease-soft)] data-[show=false]:translate-y-3 data-[show=false]:opacity-0"
+    >
+      <span
+        class="inline-flex max-w-md items-center gap-2 rounded-full bg-ink px-5 py-3 text-sm font-semibold text-cream shadow-[var(--shadow-lift)]"
+        data-toast-text></span>
+    </div>
+
     <script>
       import { onCartChange, syncCartBadges } from '../lib/cart';
 
@@ -102,5 +114,16 @@ const ogImageUrl = new URL(ogImage ?? url('og.png'), site).href;
   }
   .in-app .app-only {
     display: block;
+  }
+  .toast {
+    bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 0.75rem);
+  }
+  @media (min-width: 768px) {
+    .toast {
+      bottom: 1.5rem;
+    }
+  }
+  .in-app .toast {
+    bottom: calc(env(safe-area-inset-bottom) + 1rem);
   }
 </style>

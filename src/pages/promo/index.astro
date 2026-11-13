@@ -1,0 +1,16 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PromoCard from '../../components/PromoCard.astro';
+import { promos } from '../../data/promos';
+---
+
+<BaseLayout title="Акции" description="Акции кофеен «Пенка»: второй капучино за полцены, скидка на ранние завтраки и сироп в подарок к матче.">
+  <div class="container-page pt-6 md:pt-10">
+    <p class="eyebrow">Только в «Пенке»</p>
+    <h1 class="mt-1.5 text-3xl md:text-4xl">Акции</h1>
+    <p class="mt-3 max-w-prose text-muted">Включите уведомления в приложении — расскажем о новых акциях первыми.</p>
+    <div class="mt-6 grid gap-4 sm:grid-cols-2 md:mt-8 md:gap-6 lg:grid-cols-3">
+      {promos.map((promo) => <PromoCard promo={promo} headingLevel="h2" />)}
+    </div>
+  </div>
+</BaseLayout>

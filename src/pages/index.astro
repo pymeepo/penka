@@ -1,44 +1,143 @@
 ---
-// Phase 1 placeholder: checks the layout, fonts and tokens. The real home page comes in phase 2.
-import { Image } from 'astro:assets';
+import { Image, Picture } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import DemoNotice from '../components/DemoNotice.astro';
+import AppBanner from '../components/AppBanner.astro';
 import Icon from '../components/Icon.astro';
-import { getImage } from '../lib/images';
+import ProductCard from '../components/ProductCard.astro';
+import PromoCard from '../components/PromoCard.astro';
+import SectionHeader from '../components/SectionHeader.astro';
+import { hits } from '../data/menu';
+import { promos } from '../data/promos';
+import { CITY, locations } from '../data/locations';
+import { loadImage } from '../lib/images';
 import { url } from '../lib/url';
 
-const hero = await getImage('hero');
+const hero = await loadImage('hero');
+const interior = await loadImage('interior');
+
+const steps = [
+  { icon: 'coffee', title: 'Выберите в меню', text: 'Кофе, выпечка и завтраки — с вашим молоком и сиропом.' },
+  { icon: 'clock', title: 'Укажите время', text: 'Как можно скорее или к конкретному часу в одной из трёх кофеен.' },
+  { icon: 'shopping-bag', title: 'Заберите без очереди', text: 'Назовите имя бариста — заказ уже ждёт на стойке.' },
+] as const;
 ---
 
-<BaseLayout description="Три кофейни «Пенка» у дома: кофе, выпечка и завтраки. Закажите к приходу — заберёте без очереди.">
-  <section class="container-page py-8 md:py-14">
-    <div class="card overflow-hidden">
-      <Image
+<BaseLayout description="Три кофейни «Пенка» в Казани: кофе, выпечка и завтраки. Закажите к приходу — заберёте без очереди.">
+  <!-- Hero -->
+  <section class="md:container-page md:pt-6" aria-labelledby="hero-title">
+    <div class="relative isolate flex min-h-[78svh] items-end overflow-hidden rounded-b-[var(--radius-card-lg)] md:min-h-[560px] md:rounded-[var(--radius-card-lg)]">
+      <Picture
         src={hero}
-        alt="Утро в кофейне «Пенка»"
-        widths={[400, 800, 1200]}
+        formats={['avif', 'webp']}
+        fallbackFormat="webp"
+        alt="Бариста наливает молоко в капучино"
+        widths={[480, 768, 1080, 1440, 1920]}
         sizes="(min-width: 1200px) 1200px, 100vw"
-        class="aspect-[16/10] w-full object-cover"
+        class="absolute inset-0 -z-10 size-full object-cover object-[60%_center]"
         loading="eager"
         fetchpriority="high"
       />
-      <div class="space-y-4 p-6 md:p-10">
-        <p class="eyebrow">Каркас · фаза 1</p>
-        <h1 class="text-3xl leading-tight md:text-5xl">Кофе с пенкой и без спешки</h1>
-        <p class="max-w-prose text-lg text-muted">
-          Здесь будет главная. Пока страница проверяет шрифты Manrope и Unbounded, палитру, шапку, подвал и режим
-          приложения.
+      <div class="absolute inset-0 -z-10 bg-gradient-to-t from-ink/90 via-ink/45 to-ink/5" aria-hidden="true"></div>
+      <div class="w-full space-y-5 p-5 pb-8 text-cream sm:p-8 md:max-w-2xl md:p-12">
+        <p class="inline-flex items-center gap-2 rounded-full bg-cream/15 px-3 py-1.5 text-sm font-semibold backdrop-blur-sm">
+          <Icon name="map-pin" size={16} />
+          Три кофейни в {CITY === 'Казань' ? 'Казани' : CITY}
         </p>
-        <div class="flex flex-wrap gap-3">
-          <a href={url('menu')} class="btn btn-primary">
+        <h1 id="hero-title" class="text-[2.15rem] leading-[1.08] sm:text-5xl md:text-6xl">Кофе с пенкой и без спешки</h1>
+        <p class="max-w-md text-lg text-cream/90">Закажите заранее — бариста приготовит всё к вашему приходу.</p>
+        <div class="flex flex-wrap gap-3 pt-1">
+          <a href={url('menu')} class="btn btn-accent text-base">
             Заказать к приходу
             <Icon name="arrow-right" />
           </a>
-          <a href={url('?app=1')} class="btn btn-ghost">Режим приложения</a>
-          <a href={url('?app=0')} class="btn btn-ghost">Обычный сайт</a>
+          <a href={url('contacts')} class="btn bg-cream/15 text-cream ring-1 ring-cream/30 backdrop-blur-sm hover:bg-cream/25">
+            Адреса
+          </a>
         </div>
       </div>
     </div>
-    <DemoNotice class="mt-6" />
   </section>
+
+  <!-- Promos -->
+  <section class="container-page pt-12 md:pt-16" aria-labelledby="promos-title">
+    <SectionHeader id="promos-title" title="Акции" link={{ href: url('promo'), label: 'Все' }} />
+    <div
+      class="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 [scrollbar-width:none] md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0"
+    >
+      {promos.map((promo) => <PromoCard promo={promo} class="w-[82%] shrink-0 snap-start md:w-auto" />)}
+    </div>
+  </section>
+
+  <!-- Hits -->
+  <section class="container-page pt-8 md:pt-12" aria-labelledby="hits-title">
+    <SectionHeader id="hits-title" eyebrow="Чаще всего берут" title="Хиты" link={{ href: url('menu'), label: 'Всё меню' }} />
+    <div class="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+      {hits.map((item) => <ProductCard item={item} />)}
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="container-page pt-14 md:pt-20" aria-labelledby="how-title">
+    <SectionHeader id="how-title" eyebrow="Заказ к приходу" title="Как это работает" />
+    <ol class="grid gap-3 md:grid-cols-3 md:gap-5">
+      {
+        steps.map((step, i) => (
+          <li class="card flex gap-4 p-5">
+            <span class="relative grid size-12 shrink-0 place-items-center rounded-2xl bg-caramel-soft text-caramel-deep">
+              <Icon name={step.icon} size={24} />
+              <span class="absolute -top-1.5 -right-1.5 grid size-6 place-items-center rounded-full bg-ink text-xs font-bold text-cream">
+                {i + 1}
+              </span>
+            </span>
+            <span class="space-y-1">
+              <span class="block font-bold">{step.title}</span>
+              <span class="block text-sm text-muted">{step.text}</span>
+            </span>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+
+  <!-- Locations -->
+  <section class="container-page pt-14 md:pt-20" aria-labelledby="places-title">
+    <SectionHeader id="places-title" title="Наши кофейни" link={{ href: url('contacts'), label: 'Контакты' }} />
+    <div class="grid gap-4 md:grid-cols-[1.1fr_1fr] md:gap-6">
+      <Image
+        src={interior}
+        alt="Зал кофейни «Пенка»: деревянные столы и витрина с выпечкой"
+        widths={[480, 720, 960, 1280]}
+        sizes="(min-width: 1200px) 620px, (min-width: 768px) 55vw, 100vw"
+        class="aspect-[4/3] w-full rounded-[var(--radius-card-lg)] object-cover md:aspect-auto md:h-full"
+      />
+      <ul class="grid gap-3">
+        {
+          locations.map((loc) => (
+            <li>
+              <a
+                href={url(`contacts#${loc.slug}`)}
+                class="card group flex items-center gap-4 p-4 transition-shadow hover:shadow-[var(--shadow-lift)] sm:p-5"
+              >
+                <span class="grid size-12 shrink-0 place-items-center rounded-2xl bg-sage-soft text-sage-deep">
+                  <Icon name="map-pin" size={22} />
+                </span>
+                <span class="min-w-0 flex-1 space-y-0.5">
+                  <span class="block font-bold">{loc.name}</span>
+                  <span class="block text-muted">{loc.address}</span>
+                  <span class="block text-sm text-muted">
+                    {loc.hours.map((h) => `${h.days} ${h.time}`).join(' · ')}
+                  </span>
+                </span>
+                <Icon name="arrow-right" class="text-caramel-deep transition-transform group-hover:translate-x-0.5" />
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <div class="pt-14 md:pt-20">
+    <AppBanner />
+  </div>
 </BaseLayout>

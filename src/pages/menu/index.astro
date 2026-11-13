@@ -1,0 +1,114 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Icon from '../../components/Icon.astro';
+import ProductCard from '../../components/ProductCard.astro';
+import { categories, itemsByCategory } from '../../data/menu';
+import { url } from '../../lib/url';
+
+const groups = categories.map((c) => ({ ...c, items: itemsByCategory(c.id) })).filter((g) => g.items.length > 0);
+---
+
+<BaseLayout
+  title="Меню"
+  description="Меню кофеен «Пенка»: капучино, раф, фильтр, матча, круассаны, сырники и тосты. Добавьте в корзину и заберите к приходу."
+>
+  <div class="container-page pt-6 md:pt-10">
+    <div class="flex flex-wrap items-end justify-between gap-3">
+      <div class="space-y-1.5">
+        <p class="eyebrow">Заказ к приходу</p>
+        <h1 class="text-3xl md:text-4xl">Меню</h1>
+      </div>
+      <a href={url('files/menu.pdf')} download="penka-menu.pdf" class="btn btn-ghost btn-sm">
+        <Icon name="download" size={18} />
+        Скачать меню (PDF)
+      </a>
+    </div>
+  </div>
+
+  <nav
+    aria-label="Категории меню"
+    class="menu-chips sticky z-30 mt-4 border-b border-ink/5 bg-cream/90 py-3 backdrop-blur-md"
+  >
+    <ul class="container-page flex gap-2 overflow-x-auto [scrollbar-width:none]">
+      <li>
+        <a href="#all" class="chip whitespace-nowrap" data-filter="all" aria-current="true">Все</a>
+      </li>
+      {
+        groups.map((g) => (
+          <li>
+            <a href={`#${g.id}`} class="chip whitespace-nowrap" data-filter={g.id}>
+              {g.name}
+              <span class="ml-1.5 text-xs opacity-60">{g.items.length}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+
+  <div id="all" class="container-page space-y-10 pt-6 md:space-y-14 md:pt-8">
+    {
+      groups.map((g, gi) => (
+        <section id={g.id} data-category={g.id} aria-labelledby={`${g.id}-title`} class="scroll-mt-36">
+          <h2 id={`${g.id}-title`} class="mb-4 text-2xl md:mb-6">
+            {g.name}
+          </h2>
+          <div class="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
+            {g.items.map((item, i) => (
+              <ProductCard item={item} eager={gi === 0 && i < 2} />
+            ))}
+          </div>
+        </section>
+      ))
+    }
+  </div>
+</BaseLayout>
+
+<style>
+  .menu-chips {
+    top: var(--header-h);
+  }
+  :global(.in-app) .menu-chips {
+    top: env(safe-area-inset-top);
+  }
+  .chip[aria-current='true'] {
+    background: var(--color-ink);
+    color: var(--color-cream);
+    box-shadow: none;
+  }
+</style>
+
+<script>
+  const chips = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-filter]'));
+  const sections = Array.from(document.querySelectorAll<HTMLElement>('[data-category]'));
+  const ids = new Set(sections.map((s) => s.dataset.category));
+
+  function apply(filter: string, scroll: boolean): void {
+    const value = ids.has(filter) ? filter : 'all';
+    for (const s of sections) s.hidden = value !== 'all' && s.dataset.category !== value;
+    for (const c of chips) {
+      if (c.dataset.filter === value) c.setAttribute('aria-current', 'true');
+      else c.removeAttribute('aria-current');
+    }
+    // Keep the active chip visible in the scrollable row.
+    chips.find((c) => c.dataset.filter === value)?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    if (scroll) {
+      const top = document.getElementById('all');
+      const offset = (document.querySelector('.menu-chips')?.getBoundingClientRect().bottom ?? 0) + 8;
+      if (top && top.getBoundingClientRect().top < offset) {
+        window.scrollTo({ top: window.scrollY + top.getBoundingClientRect().top - offset });
+      }
+    }
+  }
+
+  for (const chip of chips) {
+    chip.addEventListener('click', (e) => {
+      e.preventDefault();
+      const value = chip.dataset.filter ?? 'all';
+      history.replaceState(null, '', value === 'all' ? location.pathname : `#${value}`);
+      apply(value, true);
+    });
+  }
+
+  apply(location.hash.slice(1), false);
+</script>

@@ -15,7 +15,7 @@
 - Иконки — inline SVG (пути из lucide), без иконочных шрифтов.
 - Картинки — `<Image>`/`<Picture>` из `astro:assets` (avif/webp, явные размеры).
   Фото лежат в `src/assets/images/` (не в `public/` — иначе Astro их не оптимизирует).
-  В данных фото указываются ключом (`image: 'cappuccino'`), в Astro — `await getImage(key)` из `src/lib/images.ts`.
+  В данных фото указываются ключом (`image: 'cappuccino'`), в Astro — `await loadImage(key)` из `src/lib/images.ts`.
 - Node 26 LTS (см. `.nvmrc`, nvm-windows).
 - PDF-меню — `pdf-lib` + `@pdf-lib/fontkit`, шрифт с кириллицей, генерируется скриптом перед сборкой.
 - Тесты — Playwright (мобильный вьюпорт), Lighthouse CLI.

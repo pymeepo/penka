@@ -1,0 +1,274 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { Picture, getImage } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Icon from '../../components/Icon.astro';
+import ProductCard from '../../components/ProductCard.astro';
+import { categories, menu, milkOptions, sizeOptions, syrupOptions, tagLabels, type MenuItem } from '../../data/menu';
+import { formatPrice } from '../../lib/format';
+import { loadImage } from '../../lib/images';
+import { defaultSelection, priceFor } from '../../lib/menu-options';
+import { url } from '../../lib/url';
+
+export const getStaticPaths = (() => menu.map((item) => ({ params: { slug: item.slug }, props: { item } }))) satisfies GetStaticPaths;
+
+interface Props {
+  item: MenuItem;
+}
+
+const { item } = Astro.props;
+const photo = await loadImage(item.image);
+const thumb = await getImage({ src: photo, width: 160, height: 160, format: 'webp' });
+const ogImage = await getImage({ src: photo, width: 1200, height: 630, format: 'jpg', fit: 'cover' });
+const category = categories.find((c) => c.id === item.category);
+const selection = defaultSelection(item);
+const startPrice = priceFor(item, selection);
+const opts = item.options ?? {};
+
+const isDrink = item.category === 'coffee' || item.category === 'not-coffee';
+const pairs = menu
+  .filter((m) => m.slug !== item.slug && (isDrink ? !['coffee', 'not-coffee'].includes(m.category) : m.category === 'coffee'))
+  .sort((a, b) => Number(b.tags.includes('hit')) - Number(a.tags.includes('hit')))
+  .slice(0, 4);
+
+const extra = (n: number): string => (n > 0 ? `+${formatPrice(n)}` : '');
+---
+
+<BaseLayout title={item.name} description={`${item.name}, ${item.portion} — ${item.description}`} ogImage={ogImage.src}>
+  <div class="container-page pt-4 md:pt-8">
+    <a href={url(`menu#${item.category}`)} class="inline-flex items-center gap-1 rounded-full py-2 pr-3 font-semibold text-muted hover:text-ink">
+      <Icon name="chevron-left" />
+      {category?.name ?? 'Меню'}
+    </a>
+
+    <div class="mt-2 grid gap-6 md:grid-cols-2 md:gap-10 lg:gap-14">
+      <div class="md:sticky md:top-[calc(var(--header-h)+1.5rem)] md:self-start">
+        <Picture
+          src={photo}
+          formats={['avif', 'webp']}
+          fallbackFormat="webp"
+          alt={item.name}
+          widths={[400, 640, 900, 1200]}
+          sizes="(min-width: 1200px) 560px, (min-width: 768px) 46vw, 100vw"
+          class="aspect-square w-full rounded-[var(--radius-card-lg)] object-cover shadow-[var(--shadow-soft)]"
+          loading="eager"
+          fetchpriority="high"
+        />
+      </div>
+
+      <div>
+        {
+          item.tags.length > 0 && (
+            <p class="mb-3 flex gap-2">
+              {item.tags.map((tag) => (
+                <span
+                  class:list={[
+                    'rounded-full px-3 py-1 text-xs font-bold',
+                    tag === 'hit' ? 'bg-caramel text-ink' : 'bg-sage-soft text-sage-deep',
+                  ]}
+                >
+                  {tagLabels[tag]}
+                </span>
+              ))}
+            </p>
+          )
+        }
+        <h1 class="text-3xl leading-tight md:text-4xl">{item.name}</h1>
+        <p class="mt-2 text-muted" data-portion>{item.portion}</p>
+        <p class="mt-4 max-w-prose text-lg">{item.description}</p>
+
+        <form
+          class="mt-6 space-y-6"
+          data-item-form
+          data-item={JSON.stringify(item)}
+          data-thumb={thumb.src}
+          novalidate
+        >
+          {
+            opts.sizes && (
+              <fieldset>
+                <legend class="mb-3 font-bold">Размер</legend>
+                <div class="grid grid-cols-3 gap-2">
+                  {sizeOptions.map((o) => (
+                    <label class="option-chip option-chip--size">
+                      <input class="sr-only" type="radio" name="size" value={o.id} checked={o.id === selection.size} />
+                      <span class="font-display text-lg">{o.id}</span>
+                      <span class="text-xs opacity-75">{o.volume}</span>
+                      <span class="text-xs font-bold opacity-75">{o.extra > 0 ? extra(o.extra) : 'базовый'}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            )
+          }
+          {
+            opts.milk && (
+              <fieldset>
+                <legend class="mb-3 font-bold">Молоко</legend>
+                <div class="flex flex-wrap gap-2">
+                  {milkOptions.map((o) => (
+                    <label class="option-chip">
+                      <input class="sr-only" type="radio" name="milk" value={o.id} checked={o.id === selection.milk} />
+                      <span>{o.name}</span>
+                      {o.extra > 0 && <span class="text-xs opacity-75">{extra(o.extra)}</span>}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            )
+          }
+          {
+            opts.syrup && (
+              <fieldset>
+                <legend class="mb-3 font-bold">Сироп</legend>
+                <div class="flex flex-wrap gap-2">
+                  {syrupOptions.map((o) => (
+                    <label class="option-chip">
+                      <input class="sr-only" type="radio" name="syrup" value={o.id} checked={o.id === selection.syrup} />
+                      <span>{o.name}</span>
+                      {o.extra > 0 && <span class="text-xs opacity-75">{extra(o.extra)}</span>}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            )
+          }
+
+          <div class="sticky-cta card flex items-center gap-3 p-3 md:static md:bg-transparent md:p-0 md:shadow-none">
+            <div class="flex h-12 items-center rounded-full bg-sand px-1" role="group" aria-label="Количество">
+              <button type="button" class="grid size-10 place-items-center rounded-full transition-transform active:scale-90" data-dec aria-label="Меньше">
+                <Icon name="minus" size={18} />
+              </button>
+              <output class="min-w-7 text-center font-bold tabular-nums" data-qty aria-live="polite">1</output>
+              <button type="button" class="grid size-10 place-items-center rounded-full transition-transform active:scale-90" data-inc aria-label="Больше">
+                <Icon name="plus" size={18} />
+              </button>
+            </div>
+            <button type="submit" class="btn btn-primary flex-1" data-submit>
+              <span data-submit-label>В корзину</span>
+              <span class="opacity-60" aria-hidden="true">·</span>
+              <span data-total class="tabular-nums">{formatPrice(startPrice)}</span>
+            </button>
+          </div>
+        </form>
+        <p class="mt-4 text-sm text-muted">Цена указана для заказа с собой к приходу в любой из трёх кофеен.</p>
+      </div>
+    </div>
+  </div>
+
+  <section class="container-page pt-14 md:pt-20" aria-labelledby="pairs-title">
+    <h2 id="pairs-title" class="mb-5 text-2xl md:mb-7 md:text-3xl">{isDrink ? 'К напитку берут' : 'К этому берут'}</h2>
+    <div class="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+      {pairs.map((p) => <ProductCard item={p} />)}
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .option-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem 0.5rem;
+    min-height: 3rem;
+    padding: 0.5rem 1rem;
+    border-radius: 1rem;
+    background: var(--color-card);
+    box-shadow: inset 0 0 0 1px rgb(43 29 20 / 0.12);
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+      background-color 0.2s,
+      color 0.2s,
+      transform 0.15s;
+  }
+  .option-chip--size {
+    flex-direction: column;
+    gap: 0;
+    padding-block: 0.625rem;
+  }
+  .option-chip:active {
+    transform: scale(0.97);
+  }
+  .option-chip:has(:checked) {
+    background: var(--color-ink);
+    color: var(--color-cream);
+    box-shadow: none;
+  }
+  .option-chip:has(:focus-visible) {
+    outline: 3px solid var(--color-caramel-deep);
+    outline-offset: 2px;
+  }
+  @media (max-width: 767px) {
+    .sticky-cta {
+      position: sticky;
+      bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 0.75rem);
+      z-index: 20;
+      box-shadow: var(--shadow-lift);
+    }
+    :global(.in-app) .sticky-cta {
+      bottom: calc(env(safe-area-inset-bottom) + 0.75rem);
+    }
+  }
+</style>
+
+<script>
+  import { sizeOptions, type MenuItem } from '../../data/menu';
+  import { addToCart, MAX_QTY } from '../../lib/cart';
+  import { formatPrice } from '../../lib/format';
+  import { buildLine, priceFor, type Selection } from '../../lib/menu-options';
+  import { toast } from '../../lib/toast';
+
+  const form = document.querySelector<HTMLFormElement>('[data-item-form]');
+  if (form) {
+    const item = JSON.parse(form.dataset.item ?? '{}') as MenuItem;
+    const qtyEl = form.querySelector<HTMLElement>('[data-qty]')!;
+    const totalEl = form.querySelector<HTMLElement>('[data-total]')!;
+    const labelEl = form.querySelector<HTMLElement>('[data-submit-label]')!;
+    const portionEl = document.querySelector<HTMLElement>('[data-portion]');
+    let qty = 1;
+
+    const selection = (): Selection => {
+      const data = new FormData(form);
+      return {
+        size: (data.get('size') as Selection['size']) ?? undefined,
+        milk: (data.get('milk') as Selection['milk']) ?? undefined,
+        syrup: (data.get('syrup') as Selection['syrup']) ?? undefined,
+      };
+    };
+
+    const update = (): void => {
+      const sel = selection();
+      qtyEl.textContent = String(qty);
+      totalEl.textContent = formatPrice(priceFor(item, sel) * qty);
+      const volume = sizeOptions.find((o) => o.id === sel.size)?.volume;
+      if (portionEl && volume) portionEl.textContent = volume;
+    };
+
+    form.addEventListener('change', update);
+    form.querySelector('[data-inc]')?.addEventListener('click', () => {
+      qty = Math.min(MAX_QTY, qty + 1);
+      update();
+    });
+    form.querySelector('[data-dec]')?.addEventListener('click', () => {
+      qty = Math.max(1, qty - 1);
+      update();
+    });
+
+    let resetTimer: ReturnType<typeof setTimeout> | undefined;
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      addToCart(buildLine(item, selection(), form.dataset.thumb), qty);
+      toast(qty > 1 ? `«${item.name}» × ${qty} в корзине` : `«${item.name}» в корзине`);
+      labelEl.textContent = 'Добавлено ✓';
+      clearTimeout(resetTimer);
+      resetTimer = setTimeout(() => {
+        labelEl.textContent = 'В корзину';
+      }, 1600);
+      qty = 1;
+      update();
+    });
+
+    update();
+  }
+</script>

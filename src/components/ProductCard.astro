@@ -1,0 +1,152 @@
+---
+// Menu item card with «В корзину» → quantity stepper. Adds the default variant
+// (size S, regular milk, no syrup); options live on the item page.
+import { Image, getImage } from 'astro:assets';
+import Icon from './Icon.astro';
+import { tagLabels, type MenuItem } from '../data/menu';
+import { formatPrice } from '../lib/format';
+import { loadImage } from '../lib/images';
+import { buildLine, defaultSelection } from '../lib/menu-options';
+import { url } from '../lib/url';
+
+interface Props {
+  item: MenuItem;
+  /** Load the photo eagerly (first cards above the fold). */
+  eager?: boolean;
+  headingLevel?: 'h2' | 'h3';
+}
+
+const { item, eager = false, headingLevel = 'h3' } = Astro.props;
+const Heading = headingLevel;
+const photo = await loadImage(item.image);
+const thumb = await getImage({ src: photo, width: 160, height: 160, format: 'webp' });
+const line = buildLine(item, defaultSelection(item), thumb.src);
+const hasOptions = Boolean(item.options?.sizes || item.options?.milk || item.options?.syrup);
+const href = url(`menu/${item.slug}`);
+---
+
+<article class="product-card card group flex flex-col overflow-hidden" data-product data-line={JSON.stringify(line)}>
+  <a href={href} class="relative block overflow-hidden" tabindex="-1" aria-hidden="true">
+    <Image
+      src={photo}
+      alt=""
+      widths={[240, 360, 480, 640]}
+      sizes="(min-width: 1024px) 270px, (min-width: 768px) 30vw, 46vw"
+      class="aspect-square w-full object-cover transition-transform duration-500 ease-[var(--ease-soft)] group-hover:scale-[1.03]"
+      loading={eager ? 'eager' : 'lazy'}
+    />
+    {
+      item.tags.length > 0 && (
+        <span class="absolute top-2.5 left-2.5 flex gap-1.5">
+          {item.tags.map((tag) => (
+            <span
+              class:list={[
+                'rounded-full px-2.5 py-1 text-[11px] font-bold',
+                tag === 'hit' ? 'bg-caramel text-ink' : 'bg-sage-soft text-sage-deep',
+              ]}
+            >
+              {tagLabels[tag]}
+            </span>
+          ))}
+        </span>
+      )
+    }
+  </a>
+  <div class="flex flex-1 flex-col gap-1 p-3 sm:p-4">
+    <Heading class="font-sans text-base leading-snug font-bold sm:text-lg">
+      <a href={href} class="hover:text-caramel-deep">{item.name}</a>
+      {item.tags.length > 0 && <span class="sr-only">({item.tags.map((t) => tagLabels[t].toLowerCase()).join(', ')})</span>}
+    </Heading>
+    <p class="text-sm text-muted">{item.portion}</p>
+    <p class="mt-auto pt-2 text-lg font-extrabold">
+      {hasOptions && <span class="text-sm font-semibold text-muted">от </span>}
+      {formatPrice(item.price)}
+    </p>
+    <div class="pt-1">
+      <button type="button" class="btn btn-primary btn-sm w-full" data-add>
+        <Icon name="plus" size={18} />
+        В корзину
+      </button>
+      <div
+        class="flex h-10 items-center justify-between rounded-full bg-sand px-1"
+        data-stepper
+        hidden
+        role="group"
+        aria-label={`Количество: ${item.name}`}
+      >
+        <button
+          type="button"
+          class="grid size-8 place-items-center rounded-full bg-card shadow-sm transition-transform active:scale-90"
+          data-dec
+          aria-label={`Убрать одну позицию «${item.name}»`}
+        >
+          <Icon name="minus" size={16} />
+        </button>
+        <span class="min-w-6 text-center font-bold tabular-nums" data-qty aria-live="polite">1</span>
+        <button
+          type="button"
+          class="grid size-8 place-items-center rounded-full bg-ink text-cream shadow-sm transition-transform active:scale-90"
+          data-inc
+          aria-label={`Добавить ещё «${item.name}»`}
+        >
+          <Icon name="plus" size={16} />
+        </button>
+      </div>
+    </div>
+  </div>
+</article>
+
+<script>
+  import { addToCart, getCart, MAX_QTY, onCartChange, setQty, type CartLine } from '../lib/cart';
+  import { toast } from '../lib/toast';
+
+  type Line = Omit<CartLine, 'qty'>;
+
+  const cards = (): HTMLElement[] => Array.from(document.querySelectorAll<HTMLElement>('[data-product]'));
+  const lineOf = (card: HTMLElement): Line => JSON.parse(card.dataset.line ?? '{}') as Line;
+
+  function render(): void {
+    const lines = getCart();
+    for (const card of cards()) {
+      const { key } = lineOf(card);
+      const qty = lines.find((l) => l.key === key)?.qty ?? 0;
+      const add = card.querySelector<HTMLElement>('[data-add]');
+      const stepper = card.querySelector<HTMLElement>('[data-stepper]');
+      const qtyEl = card.querySelector<HTMLElement>('[data-qty]');
+      if (add) add.hidden = qty > 0;
+      if (stepper) stepper.hidden = qty === 0;
+      if (qtyEl && qtyEl.textContent !== String(qty)) {
+        qtyEl.textContent = String(qty);
+        qtyEl.classList.remove('animate-pop');
+        void qtyEl.offsetWidth;
+        qtyEl.classList.add('animate-pop');
+      }
+      const inc = card.querySelector<HTMLButtonElement>('[data-inc]');
+      if (inc) inc.disabled = qty >= MAX_QTY;
+    }
+  }
+
+  document.addEventListener('click', (event) => {
+    const target = event.target as Element | null;
+    const button = target?.closest<HTMLButtonElement>('[data-add], [data-inc], [data-dec]');
+    const card = button?.closest<HTMLElement>('[data-product]');
+    if (!button || !card) return;
+    const line = lineOf(card);
+    const current = getCart().find((l) => l.key === line.key)?.qty ?? 0;
+
+    if (button.matches('[data-add]')) {
+      addToCart(line);
+      toast(`«${line.name}» в корзине`);
+      // Keep keyboard focus on the control that replaced the button.
+      requestAnimationFrame(() => card.querySelector<HTMLElement>('[data-inc]')?.focus());
+    } else if (button.matches('[data-inc]')) {
+      setQty(line.key, current + 1);
+    } else {
+      setQty(line.key, current - 1);
+      if (current - 1 === 0) requestAnimationFrame(() => card.querySelector<HTMLElement>('[data-add]')?.focus());
+    }
+  });
+
+  render();
+  onCartChange(render);
+</script>

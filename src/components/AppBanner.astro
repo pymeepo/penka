@@ -1,0 +1,54 @@
+---
+// «Скачайте приложение». Hidden in app mode via the .app-banner class.
+import Icon from './Icon.astro';
+import Mark from '../assets/brand/mark.svg';
+
+const perks = ['Заказ к приходу без очереди', 'Бонусы за каждый заказ', 'Уведомления об акциях'];
+---
+
+<section class="app-banner container-page" aria-labelledby="app-banner-title">
+  <div class="relative overflow-hidden rounded-[var(--radius-card-lg)] bg-ink p-6 text-cream md:p-10">
+    <div class="pointer-events-none absolute -top-16 -right-16 size-56 rounded-full bg-caramel/25" aria-hidden="true">
+    </div>
+    <div class="pointer-events-none absolute -bottom-20 left-1/3 size-48 rounded-full bg-sage/20" aria-hidden="true">
+    </div>
+    <div class="relative grid items-center gap-6 md:grid-cols-[1fr_auto]">
+      <div class="space-y-4">
+        <div class="flex items-center gap-3">
+          <span class="grid size-14 place-items-center rounded-2xl bg-cream text-ink">
+            <Mark class="size-10" aria-hidden="true" />
+          </span>
+          <h2 id="app-banner-title" class="text-2xl leading-tight md:text-3xl">Скачайте приложение</h2>
+        </div>
+        <ul class="space-y-2 text-cream/85">
+          {
+            perks.map((perk) => (
+              <li class="flex items-center gap-2">
+                <Icon name="check" size={18} class="text-caramel" />
+                {perk}
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+      <div class="flex flex-wrap gap-3">
+        <button type="button" class="btn bg-cream text-ink hover:bg-white" data-app-soon>
+          <Icon name="smartphone" />
+          Для iPhone
+        </button>
+        <button type="button" class="btn bg-cream text-ink hover:bg-white" data-app-soon>
+          <Icon name="smartphone" />
+          Для Android
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { toast } from '../lib/toast';
+
+  document.querySelectorAll('[data-app-soon]').forEach((btn) => {
+    btn.addEventListener('click', () => toast('Приложение скоро появится в магазинах'));
+  });
+</script>

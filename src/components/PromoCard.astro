@@ -1,0 +1,53 @@
+---
+import { Image } from 'astro:assets';
+import Icon from './Icon.astro';
+import type { Promo } from '../data/promos';
+import { formatDate } from '../lib/format';
+import { loadImage } from '../lib/images';
+import { url } from '../lib/url';
+
+interface Props {
+  promo: Promo;
+  class?: string;
+  headingLevel?: 'h2' | 'h3';
+}
+
+const { promo, class: className, headingLevel = 'h3' } = Astro.props;
+const Heading = headingLevel;
+const photo = await loadImage(promo.image);
+---
+
+<a
+  href={url(`promo/${promo.slug}`)}
+  class:list={[
+    'card group flex flex-col overflow-hidden transition-[transform,box-shadow] duration-300 ease-[var(--ease-soft)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)] active:scale-[0.99]',
+    className,
+  ]}
+>
+  <span class="relative block">
+    <Image
+      src={photo}
+      alt=""
+      widths={[320, 480, 640, 800]}
+      sizes="(min-width: 1024px) 380px, (min-width: 768px) 45vw, 82vw"
+      class="aspect-[16/10] w-full object-cover"
+    />
+    <span class="absolute top-3 left-3 rounded-full bg-caramel px-3 py-1 font-display text-sm font-bold text-ink">
+      {promo.badge}
+    </span>
+  </span>
+  <span class="flex flex-1 flex-col gap-2 p-4 sm:p-5">
+    <Heading class="text-lg leading-tight">{promo.title}</Heading>
+    <span class="text-muted">{promo.lead}</span>
+    <span class="mt-auto flex items-center justify-between gap-2 pt-2 text-sm font-semibold">
+      <span class="inline-flex items-center gap-1.5 text-muted">
+        <Icon name="calendar" size={16} />
+        до {formatDate(promo.validTo, false)}
+      </span>
+      <span class="inline-flex items-center gap-1 text-caramel-deep">
+        Подробнее
+        <Icon name="arrow-right" size={16} class="transition-transform group-hover:translate-x-0.5" />
+      </span>
+    </span>
+  </span>
+</a>
