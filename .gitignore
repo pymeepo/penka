@@ -22,3 +22,6 @@ playwright-report/
 Thumbs.db
 .vscode/*
 !.vscode/extensions.json
+
+# generated at build time (npm run pdf)
+public/files/menu.pdf

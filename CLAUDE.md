@@ -23,7 +23,8 @@
 
 ## Команды
 - `npm run dev` — дев-сервер (http://localhost:4321/penka/)
-- `npm run build` — генерация ассетов (PDF) + `astro check` + сборка в `dist/`
+- `npm run build` — PDF-меню (`npm run pdf`) + `astro check` + сборка в `dist/`
+- `npm run pdf` — `public/files/menu.pdf` из `src/data` (pdf-lib, WOFF-шрифты fontsource по подмножествам; не коммитится)
 - `npm run preview` — просмотр сборки
 - `npm run assets` — логотип (SVG/PNG), иконки PWA, OG-картинка, заглушки для недостающих фото (`scripts/`).
   Логотип рисуется кодом в `scripts/lib/brand.ts`; PNG для приложения — в `brand/`.

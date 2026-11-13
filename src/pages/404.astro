@@ -1,0 +1,20 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import EmptyState from '../components/EmptyState.astro';
+import Icon from '../components/Icon.astro';
+import { url } from '../lib/url';
+---
+
+<BaseLayout title="Страница не найдена" description="Такой страницы в «Пенке» нет. Загляните в меню или на главную." noindex>
+  <div class="container-page max-w-xl pt-6 md:pt-12">
+    <p class="text-center font-display text-7xl text-caramel md:text-8xl" aria-hidden="true">404</p>
+    <h1 class="sr-only">Страница не найдена</h1>
+    <EmptyState title="Тут пусто, как в чашке после капучино" text="Такой страницы нет — возможно, ссылка устарела или в адресе опечатка.">
+      <a href={url()} class="btn btn-primary">
+        <Icon name="house" />
+        На главную
+      </a>
+      <a href={url('menu')} class="btn btn-ghost">Меню</a>
+    </EmptyState>
+  </div>
+</BaseLayout>

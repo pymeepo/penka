@@ -1,0 +1,340 @@
+---
+import { Picture } from 'astro:assets';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+import { jobs } from '../data/jobs';
+import { loadImage } from '../lib/images';
+import { url } from '../lib/url';
+
+const barista = await loadImage('barista');
+const MAX_MB = 10;
+const field =
+  'block w-full rounded-2xl border-0 bg-card px-4 py-3.5 text-base shadow-[inset_0_0_0_1px_rgb(43_29_20/0.15)] placeholder:text-muted/70 focus:shadow-[inset_0_0_0_2px_var(--color-caramel-deep)] focus:outline-none aria-[invalid=true]:shadow-[inset_0_0_0_2px_var(--color-danger)]';
+const errorText = 'mt-1.5 text-sm font-semibold text-danger';
+---
+
+<BaseLayout title="Работа у нас" description="Вакансии в кофейнях «Пенка»: бариста, повар завтраков, старший смены. Откликнитесь — пришлите фото или резюме.">
+  <div class="container-page pt-6 md:pt-10">
+    <div class="grid items-center gap-6 md:grid-cols-[1.1fr_1fr] md:gap-10">
+      <div>
+        <p class="eyebrow">Вакансии</p>
+        <h1 class="mt-1.5 text-3xl leading-tight md:text-5xl">Работа у нас</h1>
+        <p class="mt-4 max-w-prose text-lg text-muted">
+          Ищем людей, которые любят кофе и гостей. Обучим, дадим нормальный график и вкусный завтрак в смену.
+        </p>
+        <a href="#apply" class="btn btn-primary mt-6">
+          Откликнуться
+          <Icon name="arrow-right" />
+        </a>
+      </div>
+      <Picture
+        src={barista}
+        formats={['avif', 'webp']}
+        fallbackFormat="webp"
+        alt="Бариста рисует латте-арт"
+        widths={[400, 640, 900]}
+        sizes="(min-width: 1024px) 520px, (min-width: 768px) 46vw, 100vw"
+        class="aspect-[4/3] w-full rounded-[var(--radius-card-lg)] object-cover shadow-[var(--shadow-soft)] md:aspect-[4/5]"
+        loading="eager"
+        fetchpriority="high"
+      />
+    </div>
+
+    <section class="pt-12 md:pt-16" aria-labelledby="jobs-title">
+      <h2 id="jobs-title" class="mb-5 text-2xl md:text-3xl">Открытые вакансии</h2>
+      <div class="grid gap-4 md:grid-cols-3">
+        {
+          jobs.map((job) => (
+            <article class="card flex flex-col p-5" aria-labelledby={`job-${job.slug}`}>
+              <span class="grid size-11 place-items-center rounded-2xl bg-caramel-soft text-caramel-deep">
+                <Icon name="briefcase" />
+              </span>
+              <h3 id={`job-${job.slug}`} class="mt-4 text-xl">
+                {job.title}
+              </h3>
+              <p class="mt-1 font-bold text-caramel-deep">{job.salary}</p>
+              <p class="text-sm text-muted">{job.schedule}</p>
+              <ul class="mt-4 space-y-2 text-sm">
+                {job.points.map((p) => (
+                  <li class="flex gap-2">
+                    <Icon name="check" size={18} class="mt-px text-sage-deep" />
+                    {p}
+                  </li>
+                ))}
+              </ul>
+              <div class="mt-auto pt-5">
+                <a href="#apply" class="btn btn-ghost btn-sm" data-apply={job.slug} aria-label={`Откликнуться на вакансию «${job.title}»`}>
+                  Откликнуться
+                </a>
+              </div>
+            </article>
+          ))
+        }
+      </div>
+    </section>
+
+    <section id="apply" class="mx-auto max-w-2xl scroll-mt-24 pt-12 md:pt-16" aria-labelledby="apply-title">
+      <h2 id="apply-title" class="text-2xl md:text-3xl">Отклик</h2>
+      <p class="mt-2 text-muted">Ответим в течение двух рабочих дней. В демо отклик никуда не уходит, но выбор файла и превью работают по-настоящему.</p>
+
+      <form class="card mt-6 space-y-5 p-5 sm:p-6" novalidate data-job-form data-max-mb={MAX_MB}>
+        <div>
+          <label for="job-name" class="mb-1.5 block text-sm font-bold">Имя</label>
+          <input id="job-name" name="name" type="text" autocomplete="name" maxlength="60" class={field} placeholder="Анна Смирнова" aria-describedby="job-name-error" />
+          <p id="job-name-error" class={errorText} data-error="name" hidden></p>
+        </div>
+        <div>
+          <label for="job-phone" class="mb-1.5 block text-sm font-bold">Телефон</label>
+          <input id="job-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" class={field} placeholder="+7 (___) ___-__-__" aria-describedby="job-phone-error" />
+          <p id="job-phone-error" class={errorText} data-error="phone" hidden></p>
+        </div>
+        <div>
+          <label for="job-vacancy" class="mb-1.5 block text-sm font-bold">Вакансия</label>
+          <select id="job-vacancy" name="vacancy" class={field} aria-describedby="job-vacancy-error">
+            <option value="">Выберите вакансию</option>
+            {jobs.map((j) => <option value={j.slug}>{j.title}</option>)}
+          </select>
+          <p id="job-vacancy-error" class={errorText} data-error="vacancy" hidden></p>
+        </div>
+
+        <div>
+          <span class="mb-1.5 block text-sm font-bold" id="job-file-label">Фото или резюме <span class="font-normal text-muted">(необязательно)</span></span>
+          <label class="file-drop" data-drop>
+            <input
+              id="job-file"
+              name="file"
+              type="file"
+              accept="image/*,application/pdf"
+              class="sr-only"
+              aria-labelledby="job-file-label"
+              aria-describedby="job-file-hint job-file-error"
+            />
+            <span class="grid size-12 place-items-center rounded-2xl bg-caramel-soft text-caramel-deep">
+              <Icon name="paperclip" />
+            </span>
+            <span class="text-center">
+              <span class="block font-bold">Выбрать файл</span>
+              <span id="job-file-hint" class="block text-sm text-muted">Фото (JPG, PNG, HEIC) или PDF до {MAX_MB} МБ. С телефона — камера или галерея.</span>
+            </span>
+          </label>
+
+          <div class="mt-3 flex items-center gap-3 rounded-2xl bg-sand p-3" data-preview hidden>
+            <img data-preview-img alt="Превью выбранного фото" class="size-20 rounded-xl object-cover" hidden />
+            <span class="grid size-20 shrink-0 place-items-center rounded-xl bg-card text-caramel-deep" data-preview-pdf hidden>
+              <Icon name="file-text" size={32} />
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block truncate font-semibold" data-file-name></span>
+              <span class="block text-sm text-muted" data-file-size></span>
+            </span>
+            <button type="button" class="grid size-10 shrink-0 place-items-center rounded-full bg-card text-muted hover:text-danger" data-file-remove aria-label="Убрать файл">
+              <Icon name="x" size={18} />
+            </button>
+          </div>
+          <p id="job-file-error" class={errorText} data-error="file" hidden></p>
+        </div>
+
+        <div>
+          <label class="flex cursor-pointer items-start gap-3">
+            <input type="checkbox" name="consent" class="mt-0.5 size-5 shrink-0 accent-[var(--color-ink)]" aria-describedby="job-consent-error" />
+            <span class="text-sm">Согласен с <a href={url('privacy')} class="link">политикой конфиденциальности</a></span>
+          </label>
+          <p id="job-consent-error" class={errorText} data-error="consent" hidden></p>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-full text-base" data-submit>Отправить отклик</button>
+      </form>
+
+      <div class="card mt-6 p-6 text-center" data-job-success hidden tabindex="-1">
+        <div class="mx-auto grid size-16 place-items-center rounded-full bg-sage text-ink">
+          <Icon name="check" size={32} strokeWidth={2.5} />
+        </div>
+        <h3 class="mt-4 text-2xl" data-success-title>Отклик отправлен</h3>
+        <p class="mt-2 text-muted" data-success-text></p>
+        <button type="button" class="btn btn-ghost mt-5" data-job-again>Отправить ещё один</button>
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .file-drop {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.5rem 1rem;
+    border-radius: 1.25rem;
+    border: 2px dashed rgb(43 29 20 / 0.2);
+    background: var(--color-card);
+    cursor: pointer;
+    transition:
+      border-color 0.2s,
+      background-color 0.2s;
+  }
+  .file-drop:hover,
+  .file-drop[data-over] {
+    border-color: var(--color-caramel);
+    background: #fff8f0;
+  }
+  .file-drop:has(:focus-visible) {
+    outline: 3px solid var(--color-caramel-deep);
+    outline-offset: 2px;
+  }
+  .file-drop[data-invalid] {
+    border-color: var(--color-danger);
+  }
+</style>
+
+<script>
+  import { attachPhoneMask, isCompletePhone } from '../lib/phone';
+  import { toast } from '../lib/toast';
+
+  const form = document.querySelector<HTMLFormElement>('[data-job-form]');
+  const success = document.querySelector<HTMLElement>('[data-job-success]');
+
+  if (form && success) {
+    const maxBytes = Number(form.dataset.maxMb ?? 10) * 1024 * 1024;
+    const name = form.querySelector<HTMLInputElement>('#job-name')!;
+    const phone = form.querySelector<HTMLInputElement>('#job-phone')!;
+    const vacancy = form.querySelector<HTMLSelectElement>('#job-vacancy')!;
+    const fileInput = form.querySelector<HTMLInputElement>('#job-file')!;
+    const consent = form.querySelector<HTMLInputElement>('input[name="consent"]')!;
+    const drop = form.querySelector<HTMLElement>('[data-drop]')!;
+    const preview = form.querySelector<HTMLElement>('[data-preview]')!;
+    const previewImg = form.querySelector<HTMLImageElement>('[data-preview-img]')!;
+    const previewPdf = form.querySelector<HTMLElement>('[data-preview-pdf]')!;
+    const submit = form.querySelector<HTMLButtonElement>('[data-submit]')!;
+    let objectUrl: string | null = null;
+    let file: File | null = null;
+    let submitted = false;
+
+    attachPhoneMask(phone);
+
+    // «Откликнуться» on a vacancy card preselects it.
+    document.querySelectorAll<HTMLAnchorElement>('[data-apply]').forEach((a) => {
+      a.addEventListener('click', () => {
+        vacancy.value = a.dataset.apply ?? '';
+        if (submitted) showErrors(validate());
+      });
+    });
+
+    const formatSize = (bytes: number): string =>
+      bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} КБ` : `${(bytes / 1024 / 1024).toFixed(1).replace('.', ',')} МБ`;
+
+    const isAllowed = (f: File): boolean => f.type.startsWith('image/') || f.type === 'application/pdf' || /\.(pdf|heic|heif|jpe?g|png|webp)$/i.test(f.name);
+
+    function setFile(next: File | null): void {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      objectUrl = null;
+      file = next;
+      if (!next) {
+        fileInput.value = '';
+        preview.hidden = true;
+        if (submitted) showErrors(validate());
+        return;
+      }
+      preview.hidden = false;
+      form!.querySelector('[data-file-name]')!.textContent = next.name;
+      form!.querySelector('[data-file-size]')!.textContent = formatSize(next.size);
+      const isImage = next.type.startsWith('image/') && !/hei[cf]/i.test(next.type);
+      previewImg.hidden = !isImage;
+      previewPdf.hidden = isImage;
+      if (isImage) {
+        objectUrl = URL.createObjectURL(next);
+        previewImg.src = objectUrl;
+      } else {
+        previewImg.removeAttribute('src');
+      }
+      showErrors(validate(), ['file']);
+    }
+
+    fileInput.addEventListener('change', () => setFile(fileInput.files?.[0] ?? null));
+    form.querySelector('[data-file-remove]')!.addEventListener('click', () => {
+      setFile(null);
+      fileInput.focus();
+    });
+
+    // Drag and drop on desktop.
+    drop.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      drop.dataset.over = '';
+    });
+    drop.addEventListener('dragleave', () => delete drop.dataset.over);
+    drop.addEventListener('drop', (e) => {
+      e.preventDefault();
+      delete drop.dataset.over;
+      const dropped = e.dataTransfer?.files?.[0];
+      if (dropped) setFile(dropped);
+    });
+
+    type Field = 'name' | 'phone' | 'vacancy' | 'file' | 'consent';
+    const controls: Record<Field, HTMLElement> = { name, phone, vacancy, file: fileInput, consent };
+
+    function validate(): Partial<Record<Field, string>> {
+      const e: Partial<Record<Field, string>> = {};
+      if (name.value.trim().length < 2) e.name = 'Укажите имя';
+      if (!isCompletePhone(phone.value)) e.phone = phone.value ? 'Номер неполный: нужно 10 цифр после +7' : 'Укажите телефон';
+      if (!vacancy.value) e.vacancy = 'Выберите вакансию';
+      if (file && !isAllowed(file)) e.file = 'Подойдёт фото или PDF';
+      else if (file && file.size > maxBytes) e.file = `Файл больше ${form!.dataset.maxMb} МБ — выберите поменьше`;
+      if (!consent.checked) e.consent = 'Нужно согласие с политикой конфиденциальности';
+      return e;
+    }
+
+    function showErrors(errors: Partial<Record<Field, string>>, only?: Field[]): void {
+      (Object.keys(controls) as Field[]).forEach((key) => {
+        if (only && !only.includes(key)) return;
+        const box = form!.querySelector<HTMLElement>(`[data-error="${key}"]`);
+        const msg = errors[key];
+        if (box) {
+          box.textContent = msg ?? '';
+          box.hidden = !msg;
+        }
+        if (msg) controls[key].setAttribute('aria-invalid', 'true');
+        else controls[key].removeAttribute('aria-invalid');
+        if (key === 'file') drop.toggleAttribute('data-invalid', Boolean(msg));
+      });
+    }
+
+    form.addEventListener('input', () => submitted && showErrors(validate()));
+    form.addEventListener('change', () => submitted && showErrors(validate()));
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      submitted = true;
+      const errors = validate();
+      showErrors(errors);
+      const first = (Object.keys(controls) as Field[]).find((k) => errors[k]);
+      if (first) {
+        controls[first].focus();
+        return;
+      }
+      submit.disabled = true;
+      submit.textContent = 'Отправляем…';
+      // Fake upload: nothing leaves the browser.
+      setTimeout(() => {
+        const title = vacancy.selectedOptions[0]?.textContent ?? '';
+        success.querySelector('[data-success-title]')!.textContent = `Спасибо, ${name.value.trim().split(/\s+/)[0]}!`;
+        success.querySelector('[data-success-text]')!.textContent =
+          `Отклик на вакансию «${title}» отправлен${file ? ` вместе с файлом «${file.name}»` : ''}. Перезвоним в течение двух рабочих дней.`;
+        form.hidden = true;
+        success.hidden = false;
+        success.focus();
+        toast('Отклик отправлен (демо)');
+        submit.disabled = false;
+        submit.textContent = 'Отправить отклик';
+      }, 900);
+    });
+
+    success.querySelector('[data-job-again]')!.addEventListener('click', () => {
+      form.reset();
+      setFile(null);
+      submitted = false;
+      showErrors({});
+      success.hidden = true;
+      form.hidden = false;
+      name.focus();
+    });
+  }
+</script>

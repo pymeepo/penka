@@ -1,0 +1,128 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import DemoNotice from '../components/DemoNotice.astro';
+import Icon from '../components/Icon.astro';
+import { CONTACT_EMAIL } from '../data/locations';
+
+const updated = '13 ноября 2026 г.';
+
+const stored = [
+  { key: 'penka_session', where: 'cookie, 30 дней', what: 'признак входа и номер телефона' },
+  { key: 'penka:profile', where: 'localStorage', what: 'имя, телефон и бонусы' },
+  { key: 'penka:cart', where: 'localStorage', what: 'позиции в корзине' },
+  { key: 'penka:orders', where: 'localStorage', what: 'история заказов (до 30 штук)' },
+  { key: 'penka:last-location', where: 'localStorage', what: 'последняя выбранная кофейня' },
+  { key: 'penka:in-app', where: 'sessionStorage', what: 'режим приложения для демо (?app=1)' },
+];
+---
+
+<BaseLayout title="Политика конфиденциальности" description="Какие данные собирает демо-сайт «Пенка» и где они хранятся: только в вашем браузере.">
+  <article class="container-page max-w-3xl pt-6 md:pt-10">
+    <p class="eyebrow">Документ</p>
+    <h1 class="mt-1.5 text-3xl leading-tight md:text-4xl">Политика конфиденциальности</h1>
+    <p class="mt-2 text-sm text-muted">Обновлено {updated}</p>
+
+    <DemoNotice class="mt-6" />
+
+    <div class="prose-penka mt-8 space-y-8">
+      <section>
+        <h2>Коротко</h2>
+        <p>
+          «Пенка» — демонстрационный сайт вымышленной кофейни. У него нет сервера, который принимал бы заказы или
+          отклики. Всё, что вы вводите, остаётся в вашем браузере и никуда не отправляется.
+        </p>
+      </section>
+
+      <section>
+        <h2>Какие данные мы видим</h2>
+        <p>Никакие. Сайт статический: страницы отдаются как готовые файлы, формы обрабатываются прямо в браузере.</p>
+        <p>
+          Сайт размещён на GitHub Pages. Как любой хостинг, GitHub может вести технические журналы (IP-адрес, время
+          запроса) — это регулируется
+          <a class="link" href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener noreferrer">политикой GitHub</a>.
+          Счётчиков, аналитики и рекламных трекеров на сайте нет.
+        </p>
+      </section>
+
+      <section>
+        <h2>Что хранится в вашем браузере</h2>
+        <div class="card overflow-x-auto p-1">
+          <table class="w-full text-left text-sm">
+            <thead>
+              <tr class="text-muted">
+                <th scope="col" class="px-4 py-3 font-semibold">Ключ</th>
+                <th scope="col" class="px-4 py-3 font-semibold">Где</th>
+                <th scope="col" class="px-4 py-3 font-semibold">Что внутри</th>
+              </tr>
+            </thead>
+            <tbody>
+              {
+                stored.map((row) => (
+                  <tr class="border-t border-ink/10">
+                    <td class="px-4 py-3 font-mono text-xs whitespace-nowrap">{row.key}</td>
+                    <td class="px-4 py-3 whitespace-nowrap">{row.where}</td>
+                    <td class="px-4 py-3">{row.what}</td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+        <p>
+          Файл, который вы прикрепляете к отклику на вакансию, читается только для превью и не загружается никуда.
+          Код подтверждения при входе не проверяется: подходит любой из четырёх цифр.
+        </p>
+      </section>
+
+      <section>
+        <h2>Как удалить данные</h2>
+        <p>Нажмите кнопку ниже — мы сотрём корзину, профиль, историю заказов и выйдем из профиля на этом устройстве.</p>
+        <button type="button" class="btn btn-ghost text-danger" data-wipe>
+          <Icon name="trash-2" />
+          Удалить мои данные
+        </button>
+        <p>Ещё можно очистить данные сайта в настройках браузера.</p>
+      </section>
+
+      <section>
+        <h2>Контакты</h2>
+        <p>
+          Вопросы о демо-проекте: <a class="link" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> (адрес вымышленный).
+        </p>
+      </section>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .prose-penka :global(h2) {
+    font-size: 1.375rem;
+    line-height: 1.25;
+    margin-bottom: 0.75rem;
+  }
+  .prose-penka :global(p) {
+    margin-top: 0.75rem;
+    line-height: 1.65;
+  }
+  .prose-penka :global(button) {
+    margin-top: 1rem;
+  }
+</style>
+
+<script>
+  import { clearCart } from '../lib/cart';
+  import { logout } from '../lib/session';
+  import { toast } from '../lib/toast';
+
+  document.querySelector('[data-wipe]')?.addEventListener('click', () => {
+    try {
+      for (const key of Object.keys(localStorage)) if (key.startsWith('penka:')) localStorage.removeItem(key);
+      sessionStorage.removeItem('penka:in-app');
+    } catch {
+      // Storage blocked — nothing stored anyway.
+    }
+    logout();
+    clearCart();
+    toast('Данные удалены с этого устройства');
+  });
+</script>
