@@ -1,4 +1,5 @@
 // Coffee shops. Phones are deliberately fake: +7 000 000-00-00.
+import type { ImageKey } from './images';
 
 export const CITY = 'Казань';
 export const CONTACT_EMAIL = 'hello@penka.example';
@@ -19,6 +20,8 @@ export interface Location {
   phone: string;
   /** [latitude, longitude] */
   coords: [number, number];
+  image: ImageKey;
+  imageAlt: string;
 }
 
 export const locations: Location[] = [
@@ -33,6 +36,8 @@ export const locations: Location[] = [
     ],
     phone: DEMO_PHONE,
     coords: [55.7887, 49.1146],
+    image: 'shop-baumana',
+    imageAlt: 'Зал у большого окна: круглые столики и кирпичная стена',
   },
   {
     slug: 'universitet',
@@ -45,6 +50,8 @@ export const locations: Location[] = [
     ],
     phone: DEMO_PHONE,
     coords: [55.7924, 49.122],
+    image: 'shop-universitet',
+    imageAlt: 'Светлый зал с высокими окнами и стойкой бариста',
   },
   {
     slug: 'pobedy',
@@ -56,6 +63,8 @@ export const locations: Location[] = [
     ],
     phone: DEMO_PHONE,
     coords: [55.7614, 49.2187],
+    image: 'shop-pobedy',
+    imageAlt: 'Летняя веранда под зонтами',
   },
 ];
 

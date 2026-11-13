@@ -13,6 +13,16 @@ export const IMAGE_KEYS = [
   'avocado-toast',
   'interior',
   'barista',
+  'flat-white',
+  'americano',
+  'raf-halva',
+  'cocoa',
+  'matcha-tonic',
+  'almond-croissant',
+  'cardamom-bun',
+  'shop-baumana',
+  'shop-universitet',
+  'shop-pobedy',
 ] as const;
 
 export type ImageKey = (typeof IMAGE_KEYS)[number];

@@ -8,7 +8,6 @@ import { telHref } from '../lib/format';
 import { loadImage } from '../lib/images';
 import { absoluteUrl } from '../lib/url';
 
-const interior = await loadImage('interior');
 const site = Astro.site;
 const pageUrl = absoluteUrl('contacts', site);
 
@@ -18,12 +17,15 @@ const telegramShare = (url: string, text: string): string =>
 const whatsappShare = (text: string): string => `https://wa.me/?text=${encodeURIComponent(text)}`;
 const routeUrl = (address: string): string => `https://yandex.ru/maps/?text=${encodeURIComponent(address)}`;
 
-const cards = locations.map((loc) => {
+const photos = await Promise.all(locations.map((loc) => loadImage(loc.image)));
+
+const cards = locations.map((loc, i) => {
   const address = fullAddress(loc);
   const url = `${pageUrl}#${loc.slug}`;
   const hours = loc.hours.map((h) => `${h.days} ${h.time}`).join(', ');
   return {
     ...loc,
+    photo: photos[i],
     fullAddress: address,
     url,
     route: routeUrl(address),
@@ -43,29 +45,27 @@ const btn = 'btn btn-sm justify-start gap-2 rounded-2xl px-3.5';
     <p class="eyebrow">Три точки в {CITY === 'Казань' ? 'Казани' : CITY}</p>
     <h1 class="mt-1.5 text-3xl md:text-4xl">Кофейни и контакты</h1>
 
-    <div class="mt-6 grid gap-6 lg:grid-cols-[1fr_1.1fr] lg:gap-10">
-      <div class="space-y-4 lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:self-start">
-        <Image
-          src={interior}
-          alt="Зал «Пенки»: длинный деревянный стол, лампы и витрина"
-          widths={[480, 720, 960]}
-          sizes="(min-width: 1024px) 540px, 100vw"
-          class="aspect-[4/3] w-full rounded-[var(--radius-card-lg)] object-cover shadow-[var(--shadow-soft)]"
-          loading="eager"
-        />
-        <DemoNotice />
-      </div>
+    <DemoNotice class="mt-5 max-w-2xl" />
 
-      <div class="space-y-4">
+    <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {
           cards.map((loc) => (
-            <article id={loc.slug} class="card scroll-mt-24 p-5" aria-labelledby={`${loc.slug}-title`}>
+            <article id={loc.slug} class="card flex scroll-mt-24 flex-col overflow-hidden" aria-labelledby={`${loc.slug}-title`}>
+              <Image
+                src={loc.photo}
+                alt={loc.imageAlt}
+                widths={[400, 640, 900]}
+                sizes="(min-width: 1280px) 380px, (min-width: 768px) 46vw, 100vw"
+                class="aspect-[16/10] w-full object-cover"
+                loading={loc.slug === cards[0]?.slug ? 'eager' : 'lazy'}
+              />
+              <div class="flex flex-1 flex-col p-5">
               <h2 id={`${loc.slug}-title`} class="text-xl">
                 {loc.name}
               </h2>
               <p class="mt-1 text-sm text-muted">{loc.note}</p>
 
-              <dl class="mt-4 grid gap-3 sm:grid-cols-2">
+              <dl class="mt-4 grid gap-3">
                 <div class="flex gap-2.5">
                   <dt class="mt-0.5 text-sage-deep">
                     <Icon name="map-pin" size={18} label="Адрес" />
@@ -111,14 +111,15 @@ const btn = 'btn btn-sm justify-start gap-2 rounded-2xl px-3.5';
                   Поделиться
                 </button>
               </div>
-              <p class="mt-3 text-sm text-muted">
+              <p class="mt-auto pt-3 text-sm text-muted">
                 Телефон: <span class="font-semibold whitespace-nowrap text-ink">{loc.phone}</span> (демо-номер)
               </p>
+              </div>
             </article>
           ))
         }
 
-        <section class="card p-5" aria-labelledby="write-title">
+        <section class="card p-5 md:col-span-2 xl:col-span-3" aria-labelledby="write-title">
           <h2 id="write-title" class="text-xl">Написать нам</h2>
           <p class="mt-1 text-sm text-muted">Отзывы, корпоративные заказы и сотрудничество.</p>
           <div class="mt-4 grid gap-2 sm:grid-cols-3">
@@ -140,7 +141,6 @@ const btn = 'btn btn-sm justify-start gap-2 rounded-2xl px-3.5';
           </p>
           <p class="mt-2 text-xs text-muted">В мессенджерах открывается окно «поделиться»: у демо-кофейни нет настоящих аккаунтов.</p>
         </section>
-      </div>
     </div>
   </div>
 </BaseLayout>

@@ -9,7 +9,7 @@ import { url } from '../lib/url';
 const thumbs = await menuThumbs();
 ---
 
-<BaseLayout title="Корзина" description="Корзина кофейни «Пенка»: проверьте заказ и оформите самовывоз к приходу." noindex>
+<BaseLayout title="Корзина" description="Корзина кофейни «Пенка»: проверьте заказ и оформите самовывоз к приходу.">
   <div class="container-page min-h-[55vh] max-w-3xl pt-6 md:pt-10" data-cart-page data-thumbs={JSON.stringify(thumbs)} data-menu-url={url('menu')}>
     <div class="flex items-end justify-between gap-3">
       <h1 class="text-3xl md:text-4xl">Корзина</h1>

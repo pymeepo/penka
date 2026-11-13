@@ -38,6 +38,16 @@ const specs: Spec[] = [
   { file: 'avocado-toast.jpg', caption: 'Тост с авокадо', from: '#7E9A64', to: '#E9E3C5', ...square },
   { file: 'interior.jpg', caption: 'Интерьер', from: '#6B4A35', to: '#BFA58A', ...wide },
   { file: 'barista.jpg', caption: 'Бариста', from: '#4A3426', to: '#A9876B', ...wide },
+  { file: 'flat-white.jpg', caption: 'Флэт уайт', from: '#8E5A3A', to: '#E8C9A6', ...square },
+  { file: 'americano.jpg', caption: 'Американо', from: '#3E2A1E', to: '#B07A52', ...square },
+  { file: 'raf-halva.jpg', caption: 'Раф с халвой', from: '#B8875E', to: '#F5E3CC', ...square },
+  { file: 'cocoa.jpg', caption: 'Какао', from: '#5A3524', to: '#C99872', ...square },
+  { file: 'matcha-tonic.jpg', caption: 'Матча-тоник', from: '#7E9A5A', to: '#F2C27A', ...square },
+  { file: 'almond-croissant.jpg', caption: 'Миндальный круассан', from: '#B4834A', to: '#F1DDB8', ...square },
+  { file: 'cardamom-bun.jpg', caption: 'Булочка с кардамоном', from: '#A26B42', to: '#EFD6B6', ...square },
+  { file: 'shop-baumana.jpg', caption: 'Пенка на Баумана', from: '#6B4A35', to: '#C9AE91', ...wide },
+  { file: 'shop-universitet.jpg', caption: 'Пенка у университета', from: '#7A6655', to: '#E2D6C6', ...wide },
+  { file: 'shop-pobedy.jpg', caption: 'Пенка на Победы', from: '#5F7A58', to: '#D9E2CC', ...wide },
 ];
 
 function svgFor(s: Spec): string {

@@ -28,8 +28,11 @@
 - `npm run preview` — просмотр сборки
 - `npm run assets` — логотип (SVG/PNG), иконки PWA, OG-картинка, заглушки для недостающих фото (`scripts/`).
   Логотип рисуется кодом в `scripts/lib/brand.ts`; PNG для приложения — в `brand/`.
-- `npm run test` — Playwright смоук-тест + скриншоты в `screenshots/`
-- `npm run lighthouse` — проверка Lighthouse (мобильный режим)
+- `npm run test` — Playwright (Pixel 7) против собранного сайта (`astro preview` на :4322): смоук всех страниц,
+  режим приложения, мост `postMessage`, заказ, вход/cookie, маска телефона; скриншоты в `screenshots/`.
+  Сначала `npm run build`.
+- `npm run lighthouse` — Lighthouse mobile по 10 страницам (`astro preview` на :4323, Chromium из Playwright);
+  отчёты в `.lighthouse/`, код выхода 1, если оценка ниже цели
 
 ## Правила
 - Тексты на сайте — на русском, цены в рублях (`350 ₽`). Код, имена файлов, коммиты — на английском.
@@ -65,6 +68,11 @@
 - Lighthouse mobile: Performance ≥ 90; Accessibility, Best Practices, SEO ≥ 95.
 - Title, description, Open Graph на каждой странице; PWA-манифест; `meta theme-color`.
 - Playwright: все страницы открываются в мобильном вьюпорте без ошибок в консоли.
+
+### Подводные камни
+- Дев-сервер Tailwind 4 не всегда подхватывает классы из новых страниц — после добавления страницы
+  перезапустить `npm run dev` (в сборке всё в порядке).
+- `noindex` только у `/order/success/` и 404: на остальных он роняет SEO в Lighthouse.
 
 ### Подводные камни Astro 7
 - Компилятор на Rust строгий: незакрытые теги и невалидный HTML — ошибка сборки.
