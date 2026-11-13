@@ -1,0 +1,161 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import CartLineTemplate from '../components/CartLineTemplate.astro';
+import EmptyState from '../components/EmptyState.astro';
+import Icon from '../components/Icon.astro';
+import { menuThumbs } from '../lib/thumbs';
+import { url } from '../lib/url';
+
+const thumbs = await menuThumbs();
+---
+
+<BaseLayout title="Корзина" description="Корзина кофейни «Пенка»: проверьте заказ и оформите самовывоз к приходу." noindex>
+  <div class="container-page min-h-[55vh] max-w-3xl pt-6 md:pt-10" data-cart-page data-thumbs={JSON.stringify(thumbs)} data-menu-url={url('menu')}>
+    <div class="flex items-end justify-between gap-3">
+      <h1 class="text-3xl md:text-4xl">Корзина</h1>
+      <button type="button" class="rounded-full px-3 py-2 text-sm font-semibold text-muted hover:text-danger" data-clear hidden>
+        Очистить
+      </button>
+    </div>
+
+    <!-- Rendered on the client from localStorage. -->
+    <div data-filled hidden>
+      <ul class="mt-6 space-y-3" data-lines aria-label="Позиции в корзине"></ul>
+
+      <section class="card mt-6 space-y-4 p-5" aria-labelledby="summary-title">
+        <h2 id="summary-title" class="sr-only">Итого</h2>
+        <dl class="space-y-2">
+          <div class="flex justify-between text-muted">
+            <dt data-count-label>Товары</dt>
+            <dd class="tabular-nums" data-subtotal></dd>
+          </div>
+          <div class="flex justify-between text-muted">
+            <dt>Самовывоз</dt>
+            <dd>0 ₽</dd>
+          </div>
+          <div class="flex justify-between border-t border-ink/10 pt-3 text-xl font-extrabold">
+            <dt>Итого</dt>
+            <dd class="tabular-nums" data-total aria-live="polite"></dd>
+          </div>
+        </dl>
+        <a href={url('order')} class="btn btn-primary w-full text-base">
+          Оформить
+          <Icon name="arrow-right" />
+        </a>
+        <p class="text-center text-sm text-muted">Оплата на кассе при получении. Это демо — заказ никуда не уйдёт.</p>
+      </section>
+    </div>
+
+    <div data-empty hidden>
+      <EmptyState title="В корзине пока пусто" text="Загляните в меню: капучино, сырники и булочки с корицей уже ждут.">
+        <a href={url('menu')} class="btn btn-primary">
+          <Icon name="coffee" />
+          Открыть меню
+        </a>
+        <a href={url('promo')} class="btn btn-ghost">Акции</a>
+      </EmptyState>
+    </div>
+  </div>
+  <CartLineTemplate />
+</BaseLayout>
+
+<script>
+  import { cartCount, cartTotal, clearCart, getCart, MAX_QTY, onCartChange, removeFromCart, setQty } from '../lib/cart';
+  import { formatPrice, plural } from '../lib/format';
+  import { toast } from '../lib/toast';
+
+  const root = document.querySelector<HTMLElement>('[data-cart-page]');
+  const tpl = document.querySelector<HTMLTemplateElement>('#cart-line-template');
+  if (root && tpl) {
+    const thumbs = JSON.parse(root.dataset.thumbs ?? '{}') as Record<string, string>;
+    const menuUrl = root.dataset.menuUrl ?? '';
+    const list = root.querySelector<HTMLUListElement>('[data-lines]')!;
+    const filled = root.querySelector<HTMLElement>('[data-filled]')!;
+    const empty = root.querySelector<HTMLElement>('[data-empty]')!;
+    const clearBtn = root.querySelector<HTMLButtonElement>('[data-clear]')!;
+
+    const render = (): void => {
+      const lines = getCart();
+      const isEmpty = lines.length === 0;
+      filled.hidden = isEmpty;
+      empty.hidden = !isEmpty;
+      clearBtn.hidden = isEmpty;
+      if (isEmpty) {
+        list.replaceChildren();
+        return;
+      }
+
+      // Reuse existing nodes by key so focus and animations survive re-renders.
+      const existing = new Map(Array.from(list.children).map((el) => [(el as HTMLElement).dataset.key, el as HTMLElement]));
+      const nodes = lines.map((line) => {
+        let el = existing.get(line.key);
+        if (!el) {
+          el = (tpl.content.firstElementChild as HTMLElement).cloneNode(true) as HTMLElement;
+          el.dataset.key = line.key;
+          el.querySelectorAll<HTMLAnchorElement>('[data-link]').forEach((a) => (a.href = `${menuUrl}${line.slug}/`));
+          const img = el.querySelector<HTMLImageElement>('[data-img]')!;
+          img.src = thumbs[line.slug] ?? line.image ?? '';
+          el.querySelector('[data-name]')!.textContent = line.name;
+          el.querySelector('[data-options]')!.textContent = line.options.join(' · ');
+          el.querySelector('[data-remove]')!.setAttribute('aria-label', `Удалить «${line.name}»`);
+          el.querySelector('[data-qty-group]')!.setAttribute('aria-label', `Количество: ${line.name}`);
+          el.querySelector('[data-dec]')!.setAttribute('aria-label', `Убрать одну позицию «${line.name}»`);
+          el.querySelector('[data-inc]')!.setAttribute('aria-label', `Добавить ещё «${line.name}»`);
+        }
+        el.querySelector('[data-qty]')!.textContent = String(line.qty);
+        el.querySelector('[data-sum]')!.textContent = formatPrice(line.unitPrice * line.qty);
+        el.querySelector<HTMLButtonElement>('[data-inc]')!.disabled = line.qty >= MAX_QTY;
+        return el;
+      });
+      list.replaceChildren(...nodes);
+
+      const count = cartCount(lines);
+      root.querySelector('[data-count-label]')!.textContent = `${count} ${plural(count, ['товар', 'товара', 'товаров'])}`;
+      root.querySelector('[data-subtotal]')!.textContent = formatPrice(cartTotal(lines));
+      root.querySelector('[data-total]')!.textContent = formatPrice(cartTotal(lines));
+    };
+
+    list.addEventListener('click', (event) => {
+      const btn = (event.target as Element).closest<HTMLButtonElement>('button');
+      const row = btn?.closest<HTMLElement>('[data-line]');
+      const key = row?.dataset.key;
+      if (!btn || !row || !key) return;
+      const line = getCart().find((l) => l.key === key);
+      if (!line) return;
+
+      if (btn.matches('[data-inc]')) setQty(key, line.qty + 1);
+      else if (btn.matches('[data-dec]') && line.qty > 1) setQty(key, line.qty - 1);
+      else if (btn.matches('[data-remove]') || btn.matches('[data-dec]')) {
+        const next = row.nextElementSibling ?? row.previousElementSibling;
+        row.classList.add('is-leaving');
+        const remove = (): void => {
+          removeFromCart(key);
+          toast(`«${line.name}» удалён из корзины`);
+          (next?.querySelector<HTMLElement>('[data-remove]') ?? document.querySelector<HTMLElement>('[data-empty] a'))?.focus();
+        };
+        if (matchMedia('(prefers-reduced-motion: reduce)').matches) remove();
+        else setTimeout(remove, 220);
+      }
+    });
+
+    clearBtn.addEventListener('click', () => {
+      clearCart();
+      toast('Корзина очищена');
+    });
+
+    render();
+    onCartChange(render);
+  }
+</script>
+
+<style>
+  :global(.cart-line) {
+    transition:
+      opacity 0.22s,
+      transform 0.22s var(--ease-soft);
+  }
+  :global(.cart-line.is-leaving) {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+</style>

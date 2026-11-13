@@ -1,0 +1,363 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import EmptyState from '../../components/EmptyState.astro';
+import Icon from '../../components/Icon.astro';
+import { locations } from '../../data/locations';
+import { url } from '../../lib/url';
+
+const field =
+  'block w-full rounded-2xl border-0 bg-card px-4 py-3.5 text-base shadow-[inset_0_0_0_1px_rgb(43_29_20/0.15)] placeholder:text-muted/70 focus:shadow-[inset_0_0_0_2px_var(--color-caramel-deep)] focus:outline-none aria-[invalid=true]:shadow-[inset_0_0_0_2px_var(--color-danger)]';
+const errorText = 'mt-1.5 text-sm font-semibold text-danger';
+---
+
+<BaseLayout title="Оформление заказа" description="Самовывоз из кофейни «Пенка»: выберите точку и время, заказ будет готов к вашему приходу." noindex>
+  <div class="container-page min-h-[55vh] max-w-3xl pt-4 md:pt-8" data-order-page data-success-url={url('order/success')}>
+    <a href={url('cart')} class="inline-flex items-center gap-1 rounded-full py-2 pr-3 font-semibold text-muted hover:text-ink">
+      <Icon name="chevron-left" />
+      Корзина
+    </a>
+    <h1 class="mt-1 text-3xl md:text-4xl">Оформление</h1>
+    <p class="mt-2 text-muted">Самовывоз — заберёте в кофейне без очереди.</p>
+
+    <div data-empty hidden>
+      <EmptyState title="Сначала соберите заказ" text="Корзина пуста — оформлять пока нечего.">
+        <a href={url('menu')} class="btn btn-primary">Открыть меню</a>
+      </EmptyState>
+    </div>
+
+    <form class="mt-6 space-y-8" novalidate data-order-form hidden>
+      <!-- Location -->
+      <fieldset aria-describedby="location-error">
+        <legend class="mb-3 font-display text-xl">Где заберёте</legend>
+        <div class="grid gap-3">
+          {
+            locations.map((loc, i) => (
+              <label class="choice-card">
+                <input type="radio" name="location" value={loc.slug} class="choice-input" checked={i === 0} />
+                <span class="grid size-11 shrink-0 place-items-center rounded-2xl bg-sage-soft text-sage-deep">
+                  <Icon name="map-pin" />
+                </span>
+                <span class="min-w-0 flex-1">
+                  <span class="block font-bold">{loc.name}</span>
+                  <span class="block text-sm text-muted">
+                    {loc.address} · {loc.hours.map((h) => `${h.days} ${h.time}`).join(', ')}
+                  </span>
+                </span>
+                <span class="choice-dot" aria-hidden="true" />
+              </label>
+            ))
+          }
+        </div>
+        <p id="location-error" class={errorText} data-error="location" hidden></p>
+      </fieldset>
+
+      <!-- Time -->
+      <fieldset>
+        <legend class="mb-3 font-display text-xl">Когда</legend>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <label class="choice-card">
+            <input type="radio" name="when" value="asap" class="choice-input" checked />
+            <span class="grid size-11 shrink-0 place-items-center rounded-2xl bg-caramel-soft text-caramel-deep">
+              <Icon name="clock" />
+            </span>
+            <span class="flex-1">
+              <span class="block font-bold">Как можно скорее</span>
+              <span class="block text-sm text-muted" data-asap-hint>примерно через 15 минут</span>
+            </span>
+            <span class="choice-dot" aria-hidden="true" />
+          </label>
+          <label class="choice-card">
+            <input type="radio" name="when" value="slot" class="choice-input" />
+            <span class="grid size-11 shrink-0 place-items-center rounded-2xl bg-caramel-soft text-caramel-deep">
+              <Icon name="calendar" />
+            </span>
+            <span class="flex-1">
+              <span class="block font-bold">Ко времени</span>
+              <span class="block text-sm text-muted">выберите слот ниже</span>
+            </span>
+            <span class="choice-dot" aria-hidden="true" />
+          </label>
+        </div>
+        <div class="mt-3" data-slot-wrap hidden>
+          <label for="slot" class="mb-1.5 block text-sm font-bold">Время получения</label>
+          <select id="slot" name="slot" class={field} aria-describedby="slot-error"></select>
+          <p id="slot-error" class={errorText} data-error="slot" hidden></p>
+        </div>
+      </fieldset>
+
+      <!-- Contacts -->
+      <fieldset class="space-y-4">
+        <legend class="mb-3 font-display text-xl">Контакты</legend>
+        <div>
+          <label for="name" class="mb-1.5 block text-sm font-bold">Имя</label>
+          <input id="name" name="name" type="text" autocomplete="given-name" class={field} placeholder="Как к вам обращаться" maxlength="40" aria-describedby="name-error" />
+          <p id="name-error" class={errorText} data-error="name" hidden></p>
+        </div>
+        <div>
+          <label for="phone" class="mb-1.5 block text-sm font-bold">Телефон</label>
+          <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" class={field} placeholder="+7 (___) ___-__-__" aria-describedby="phone-hint phone-error" />
+          <p id="phone-hint" class="mt-1.5 text-sm text-muted">Пришлём СМС, когда заказ будет готов. В демо — не пришлём.</p>
+          <p id="phone-error" class={errorText} data-error="phone" hidden></p>
+        </div>
+        <div>
+          <label for="comment" class="mb-1.5 block text-sm font-bold">Комментарий <span class="font-normal text-muted">(необязательно)</span></label>
+          <textarea id="comment" name="comment" rows="3" maxlength="300" class={field} placeholder="Например: без крышки, погорячее"></textarea>
+        </div>
+      </fieldset>
+
+      <!-- Summary -->
+      <section class="card space-y-4 p-5" aria-labelledby="order-summary-title">
+        <h2 id="order-summary-title" class="font-sans text-lg font-bold">Ваш заказ</h2>
+        <ul class="space-y-2 text-sm" data-summary></ul>
+        <div class="flex justify-between border-t border-ink/10 pt-3 text-xl font-extrabold">
+          <span>Итого</span>
+          <span class="tabular-nums" data-total></span>
+        </div>
+
+        <div>
+          <label class="flex cursor-pointer items-start gap-3">
+            <input type="checkbox" name="consent" class="mt-0.5 size-5 shrink-0 accent-[var(--color-ink)]" aria-describedby="consent-error" />
+            <span class="text-sm">
+              Согласен с <a href={url('privacy')} class="link" target="_blank">политикой конфиденциальности</a> и обработкой
+              данных для заказа
+            </span>
+          </label>
+          <p id="consent-error" class={errorText} data-error="consent" hidden></p>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-full text-base" data-submit>
+          <span data-submit-label>Подтвердить заказ</span>
+        </button>
+        <p class="text-center text-sm text-muted">Оплата на кассе при получении.</p>
+      </section>
+    </form>
+  </div>
+</BaseLayout>
+
+<style>
+  .choice-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    padding: 0.875rem 1rem;
+    border-radius: 1.25rem;
+    background: var(--color-card);
+    box-shadow: inset 0 0 0 1px rgb(43 29 20 / 0.12);
+    cursor: pointer;
+    transition:
+      box-shadow 0.2s,
+      transform 0.15s;
+  }
+  .choice-card:active {
+    transform: scale(0.99);
+  }
+  .choice-card:has(:checked) {
+    box-shadow:
+      inset 0 0 0 2px var(--color-ink),
+      var(--shadow-soft);
+  }
+  .choice-card:has(:focus-visible) {
+    outline: 3px solid var(--color-caramel-deep);
+    outline-offset: 2px;
+  }
+  .choice-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .choice-dot {
+    width: 1.375rem;
+    height: 1.375rem;
+    flex-shrink: 0;
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 2px rgb(43 29 20 / 0.25);
+    transition: box-shadow 0.2s;
+  }
+  .choice-card:has(:checked) .choice-dot {
+    box-shadow:
+      inset 0 0 0 6px var(--color-ink),
+      inset 0 0 0 20px var(--color-cream);
+  }
+</style>
+
+<script>
+  import { cartTotal, clearCart, getCart } from '../../lib/cart';
+  import { formatPrice } from '../../lib/format';
+  import { lastLocation, nextOrderNumber, saveOrder, type Order } from '../../lib/orders';
+  import { attachPhoneMask, formatPhone, isCompletePhone, maskedDigits } from '../../lib/phone';
+  import { currentProfile, saveProfile } from '../../lib/session';
+
+  const SLOT_STEP = 15; // minutes
+  const SLOT_COUNT = 12; // three hours ahead
+  const ASAP_MINUTES = 15;
+
+  const root = document.querySelector<HTMLElement>('[data-order-page]');
+  const form = document.querySelector<HTMLFormElement>('[data-order-form]');
+  if (root && form) {
+    const lines = getCart();
+    if (lines.length === 0) {
+      root.querySelector<HTMLElement>('[data-empty]')!.hidden = false;
+    } else {
+      form.hidden = false;
+      init(form, root);
+    }
+  }
+
+  function init(form: HTMLFormElement, root: HTMLElement): void {
+    const lines = getCart();
+    const total = cartTotal(lines);
+    const els = form.elements;
+    const name = els.namedItem('name') as HTMLInputElement;
+    const phone = els.namedItem('phone') as HTMLInputElement;
+    const comment = els.namedItem('comment') as HTMLTextAreaElement;
+    const consent = els.namedItem('consent') as HTMLInputElement;
+    const slot = els.namedItem('slot') as HTMLSelectElement;
+    const slotWrap = form.querySelector<HTMLElement>('[data-slot-wrap]')!;
+    const submit = form.querySelector<HTMLButtonElement>('[data-submit]')!;
+    const submitLabel = form.querySelector<HTMLElement>('[data-submit-label]')!;
+
+    // Summary
+    const summary = form.querySelector<HTMLUListElement>('[data-summary]')!;
+    summary.replaceChildren(
+      ...lines.map((l) => {
+        const li = document.createElement('li');
+        li.className = 'flex justify-between gap-3';
+        const left = document.createElement('span');
+        left.textContent = `${l.name} × ${l.qty}`;
+        const opts = document.createElement('span');
+        opts.className = 'block text-muted';
+        opts.textContent = l.options.join(' · ');
+        left.append(opts);
+        const right = document.createElement('span');
+        right.className = 'shrink-0 font-semibold tabular-nums';
+        right.textContent = formatPrice(l.unitPrice * l.qty);
+        li.append(left, right);
+        return li;
+      }),
+    );
+    form.querySelector('[data-total]')!.textContent = formatPrice(total);
+    submitLabel.textContent = `Подтвердить заказ · ${formatPrice(total)}`;
+
+    // Defaults: last location, profile contacts
+    const last = lastLocation();
+    const lastInput = last ? form.querySelector<HTMLInputElement>(`input[name="location"][value="${last}"]`) : null;
+    if (lastInput) lastInput.checked = true;
+    const profile = currentProfile();
+    if (profile) {
+      if (profile.name) name.value = profile.name;
+      phone.value = formatPhone(profile.phone);
+    }
+    attachPhoneMask(phone);
+
+    // Time slots, starting from the next quarter hour + 15 minutes
+    const now = new Date();
+    const start = new Date(now);
+    start.setSeconds(0, 0);
+    start.setMinutes(Math.ceil((now.getMinutes() + 1) / SLOT_STEP) * SLOT_STEP + SLOT_STEP);
+    const timeFmt = new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    const dayFmt = new Intl.DateTimeFormat('ru-RU', { weekday: 'short' });
+    for (let i = 0; i < SLOT_COUNT; i++) {
+      const t = new Date(start.getTime() + i * SLOT_STEP * 60_000);
+      const tomorrow = t.getDate() !== now.getDate();
+      const option = new Option(`${tomorrow ? `${dayFmt.format(t)}, ` : ''}${timeFmt.format(t)}`, String(t.getTime()));
+      slot.add(option);
+    }
+    const asapAt = new Date(now.getTime() + ASAP_MINUTES * 60_000);
+    form.querySelector('[data-asap-hint]')!.textContent = `примерно к ${timeFmt.format(asapAt)}`;
+
+    const syncWhen = (): void => {
+      const isSlot = (form.querySelector<HTMLInputElement>('input[name="when"]:checked')?.value ?? 'asap') === 'slot';
+      slotWrap.hidden = !isSlot;
+    };
+    form.addEventListener('change', (e) => {
+      if ((e.target as HTMLInputElement).name === 'when') syncWhen();
+    });
+    syncWhen();
+
+    // Validation
+    type FieldName = 'location' | 'slot' | 'name' | 'phone' | 'consent';
+    const controls: Record<FieldName, HTMLElement> = {
+      location: form.querySelector('input[name="location"]')!,
+      slot,
+      name,
+      phone,
+      consent,
+    };
+    let submitted = false;
+
+    const validate = (): Partial<Record<FieldName, string>> => {
+      const errors: Partial<Record<FieldName, string>> = {};
+      if (!form.querySelector('input[name="location"]:checked')) errors.location = 'Выберите кофейню';
+      const isSlot = form.querySelector<HTMLInputElement>('input[name="when"]:checked')?.value === 'slot';
+      if (isSlot && !slot.value) errors.slot = 'Выберите время';
+      const n = name.value.trim();
+      if (n.length < 2) errors.name = n ? 'Имя слишком короткое' : 'Укажите имя — бариста назовёт его при выдаче';
+      if (!isCompletePhone(phone.value)) errors.phone = phone.value ? 'Номер неполный: нужно 10 цифр после +7' : 'Укажите телефон';
+      if (!consent.checked) errors.consent = 'Нужно согласие с политикой конфиденциальности';
+      return errors;
+    };
+
+    const showErrors = (errors: Partial<Record<FieldName, string>>): void => {
+      (Object.keys(controls) as FieldName[]).forEach((key) => {
+        const msg = errors[key];
+        const box = form.querySelector<HTMLElement>(`[data-error="${key}"]`);
+        if (box) {
+          box.textContent = msg ?? '';
+          box.hidden = !msg;
+        }
+        if (msg) controls[key].setAttribute('aria-invalid', 'true');
+        else controls[key].removeAttribute('aria-invalid');
+      });
+    };
+
+    form.addEventListener('input', () => {
+      if (submitted) showErrors(validate());
+    });
+    form.addEventListener('change', () => {
+      if (submitted) showErrors(validate());
+    });
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      submitted = true;
+      const errors = validate();
+      showErrors(errors);
+      const first = (Object.keys(controls) as FieldName[]).find((k) => errors[k]);
+      if (first) {
+        const ctrl = controls[first];
+        ctrl.focus({ preventScroll: true });
+        ctrl.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+        return;
+      }
+
+      submit.disabled = true;
+      submitLabel.textContent = 'Отправляем…';
+
+      const asap = form.querySelector<HTMLInputElement>('input[name="when"]:checked')?.value !== 'slot';
+      const order: Order = {
+        number: nextOrderNumber(),
+        createdAt: Date.now(),
+        readyAt: asap ? Date.now() + ASAP_MINUTES * 60_000 : Number(slot.value),
+        asap,
+        locationSlug: form.querySelector<HTMLInputElement>('input[name="location"]:checked')!.value,
+        name: name.value.trim(),
+        phone: maskedDigits(phone.value),
+        comment: comment.value.trim(),
+        lines: getCart(),
+        total,
+      };
+
+      // Remember the name for next time if the user is logged in.
+      const p = currentProfile();
+      if (p && !p.name) saveProfile({ ...p, name: order.name });
+
+      // Fake network delay so the loading state is visible.
+      setTimeout(() => {
+        saveOrder(order);
+        clearCart();
+        location.href = `${root.dataset.successUrl}?n=${encodeURIComponent(order.number)}`;
+      }, 700);
+    });
+  }
+</script>

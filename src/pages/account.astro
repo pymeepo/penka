@@ -1,0 +1,336 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+import { locations } from '../data/locations';
+import { url } from '../lib/url';
+
+const places = Object.fromEntries(locations.map((l) => [l.slug, l.name]));
+const field =
+  'block w-full rounded-2xl border-0 bg-card px-4 py-3.5 text-base shadow-[inset_0_0_0_1px_rgb(43_29_20/0.15)] placeholder:text-muted/70 focus:shadow-[inset_0_0_0_2px_var(--color-caramel-deep)] focus:outline-none aria-[invalid=true]:shadow-[inset_0_0_0_2px_var(--color-danger)]';
+const errorText = 'mt-1.5 text-sm font-semibold text-danger';
+---
+
+<BaseLayout title="Профиль" description="Профиль в кофейнях «Пенка»: вход по номеру телефона, бонусы и история заказов." noindex>
+  <div
+    class="container-page min-h-[60vh] max-w-xl pt-6 md:pt-10"
+    data-account
+    data-places={JSON.stringify(places)}
+    data-menu-url={url('menu')}
+    data-cart-url={url('cart')}
+  >
+    <!-- Step 1: phone -->
+    <section data-step="phone" hidden aria-labelledby="login-title">
+      <h1 id="login-title" class="text-3xl md:text-4xl">Вход</h1>
+      <p class="mt-2 text-muted">Бонусы, история заказов и быстрый повтор любимого заказа.</p>
+      <form class="card mt-6 space-y-4 p-5" novalidate data-phone-form>
+        <div>
+          <label for="login-phone" class="mb-1.5 block text-sm font-bold">Номер телефона</label>
+          <input id="login-phone" type="tel" inputmode="tel" autocomplete="tel" class={field} placeholder="+7 (___) ___-__-__" aria-describedby="login-phone-error" />
+          <p id="login-phone-error" class={errorText} hidden></p>
+        </div>
+        <button type="submit" class="btn btn-primary w-full">Получить код</button>
+        <p class="text-sm text-muted">
+          Продолжая, вы соглашаетесь с <a href={url('privacy')} class="link">политикой конфиденциальности</a>.
+        </p>
+      </form>
+    </section>
+
+    <!-- Step 2: code -->
+    <section data-step="code" hidden aria-labelledby="code-title">
+      <button type="button" class="inline-flex items-center gap-1 rounded-full py-2 pr-3 font-semibold text-muted hover:text-ink" data-change-phone>
+        <Icon name="chevron-left" />
+        Изменить номер
+      </button>
+      <h1 id="code-title" class="mt-1 text-3xl md:text-4xl">Код из СМС</h1>
+      <p class="mt-2 text-muted">Отправили код на <span class="font-semibold whitespace-nowrap text-ink" data-sent-to></span></p>
+      <form class="card mt-6 space-y-4 p-5" novalidate data-code-form>
+        <div>
+          <label for="login-code" class="mb-1.5 block text-sm font-bold">Код</label>
+          <input
+            id="login-code"
+            type="text"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            maxlength="4"
+            pattern="[0-9]{4}"
+            class:list={[field, 'text-center font-display text-3xl tracking-[0.5em]']}
+            placeholder="••••"
+            aria-describedby="login-code-hint login-code-error"
+          />
+          <p id="login-code-hint" class="mt-2 flex items-center gap-2 rounded-xl bg-sage-soft px-3 py-2 text-sm">
+            <Icon name="gift" size={16} class="text-sage-deep" />
+            Демо: подойдёт любой 4-значный код, например 1234
+          </p>
+          <p id="login-code-error" class={errorText} hidden></p>
+        </div>
+        <button type="submit" class="btn btn-primary w-full" data-code-submit>Войти</button>
+        <button type="button" class="w-full rounded-full py-2 text-sm font-semibold text-muted disabled:opacity-70" data-resend disabled>
+          Отправить код ещё раз через <span data-countdown>0:30</span>
+        </button>
+      </form>
+    </section>
+
+    <!-- Profile -->
+    <section data-step="profile" hidden aria-labelledby="profile-title">
+      <div class="flex items-center gap-4">
+        <span class="grid size-16 shrink-0 place-items-center rounded-full bg-caramel font-display text-2xl text-ink" data-avatar aria-hidden="true">П</span>
+        <div class="min-w-0 flex-1">
+          <h1 id="profile-title" class="truncate text-2xl md:text-3xl" data-name-view>Профиль</h1>
+          <p class="text-muted" data-phone-view></p>
+        </div>
+        <button type="button" class="grid size-11 shrink-0 place-items-center rounded-full bg-card shadow-[var(--shadow-soft)]" data-edit-name aria-label="Изменить имя">
+          <Icon name="pencil" size={18} />
+        </button>
+      </div>
+
+      <form class="card mt-4 space-y-3 p-4" novalidate data-name-form hidden>
+        <label for="profile-name" class="block text-sm font-bold">Как к вам обращаться</label>
+        <input id="profile-name" type="text" autocomplete="given-name" maxlength="40" class={field} aria-describedby="profile-name-error" />
+        <p id="profile-name-error" class={errorText} hidden></p>
+        <div class="flex gap-2">
+          <button type="submit" class="btn btn-primary btn-sm flex-1">Сохранить</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-cancel-name>Отмена</button>
+        </div>
+      </form>
+
+      <div class="relative mt-6 overflow-hidden rounded-[var(--radius-card-lg)] bg-sage p-5 text-ink">
+        <span class="absolute -top-10 -right-10 size-36 rounded-full bg-cream/25" aria-hidden="true"></span>
+        <p class="relative text-sm font-bold">Бонусный счёт</p>
+        <p class="relative mt-1 font-display text-4xl" data-bonus>120</p>
+        <p class="relative mt-1 text-sm">1 бонус = 1 ₽. Списать можно на кассе — в демо, конечно, нельзя.</p>
+      </div>
+
+      <section class="mt-8" aria-labelledby="history-title">
+        <h2 id="history-title" class="mb-4 text-2xl">История заказов</h2>
+        <ul class="space-y-3" data-history></ul>
+        <div class="card p-5 text-center" data-history-empty hidden>
+          <p class="font-bold">Заказов пока нет</p>
+          <p class="mt-1 text-sm text-muted">Оформите первый — он появится здесь.</p>
+          <a href={url('menu')} class="btn btn-primary btn-sm mt-4">Открыть меню</a>
+        </div>
+      </section>
+
+      <div class="mt-8 space-y-3 border-t border-ink/10 pt-6">
+        <p class="text-sm text-muted" data-session-info></p>
+        <button type="button" class="btn btn-ghost w-full text-danger" data-logout>
+          <Icon name="log-out" />
+          Выйти
+        </button>
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<script>
+  import { addToCart } from '../lib/cart';
+  import { formatPrice, plural } from '../lib/format';
+  import { formatDayTime, getOrders } from '../lib/orders';
+  import { attachPhoneMask, formatPhone, isCompletePhone, maskedDigits } from '../lib/phone';
+  import { currentProfile, getSession, isValidCode, login, logout, saveProfile, SESSION_MAX_AGE } from '../lib/session';
+  import { toast } from '../lib/toast';
+
+  const RESEND_SECONDS = 30;
+  const root = document.querySelector<HTMLElement>('[data-account]');
+
+  if (root) {
+    const steps = Array.from(root.querySelectorAll<HTMLElement>('[data-step]'));
+    const places = JSON.parse(root.dataset.places ?? '{}') as Record<string, string>;
+    let pendingPhone = '';
+    let countdown: ReturnType<typeof setInterval> | undefined;
+
+    const show = (name: 'phone' | 'code' | 'profile', focus?: string): void => {
+      for (const s of steps) s.hidden = s.dataset.step !== name;
+      if (focus) root.querySelector<HTMLElement>(focus)?.focus();
+    };
+
+    const setError = (input: HTMLInputElement, message: string): void => {
+      const box = document.getElementById(`${input.id}-error`);
+      if (box) {
+        box.textContent = message;
+        box.hidden = !message;
+      }
+      if (message) input.setAttribute('aria-invalid', 'true');
+      else input.removeAttribute('aria-invalid');
+    };
+
+    // --- Step 1: phone ----------------------------------------------------
+    const phoneInput = root.querySelector<HTMLInputElement>('#login-phone')!;
+    attachPhoneMask(phoneInput);
+    root.querySelector<HTMLFormElement>('[data-phone-form]')!.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!isCompletePhone(phoneInput.value)) {
+        setError(phoneInput, phoneInput.value ? 'Номер неполный: нужно 10 цифр после +7' : 'Введите номер телефона');
+        phoneInput.focus();
+        return;
+      }
+      setError(phoneInput, '');
+      pendingPhone = maskedDigits(phoneInput.value);
+      root.querySelector('[data-sent-to]')!.textContent = formatPhone(pendingPhone);
+      codeInput.value = '';
+      setError(codeInput, '');
+      startCountdown();
+      show('code', '#login-code');
+      toast('Код отправлен. В демо подойдёт любой, например 1234');
+    });
+
+    // --- Step 2: code -----------------------------------------------------
+    const codeInput = root.querySelector<HTMLInputElement>('#login-code')!;
+    const codeForm = root.querySelector<HTMLFormElement>('[data-code-form]')!;
+    const resend = root.querySelector<HTMLButtonElement>('[data-resend]')!;
+
+    function startCountdown(): void {
+      let left = RESEND_SECONDS;
+      clearInterval(countdown);
+      resend.disabled = true;
+      const tick = (): void => {
+        if (left <= 0) {
+          clearInterval(countdown);
+          resend.disabled = false;
+          resend.textContent = 'Отправить код ещё раз';
+          return;
+        }
+        resend.innerHTML = `Отправить код ещё раз через <span>0:${String(left).padStart(2, '0')}</span>`;
+        left -= 1;
+      };
+      tick();
+      countdown = setInterval(tick, 1000);
+    }
+
+    resend.addEventListener('click', () => {
+      startCountdown();
+      toast('Отправили новый код');
+    });
+
+    root.querySelector('[data-change-phone]')!.addEventListener('click', () => {
+      clearInterval(countdown);
+      show('phone', '#login-phone');
+    });
+
+    codeInput.addEventListener('input', () => {
+      codeInput.value = codeInput.value.replace(/\D/g, '').slice(0, 4);
+      setError(codeInput, '');
+      if (codeInput.value.length === 4) codeForm.requestSubmit();
+    });
+
+    codeForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!isValidCode(codeInput.value)) {
+        setError(codeInput, 'Код состоит из 4 цифр');
+        codeInput.focus();
+        return;
+      }
+      clearInterval(countdown);
+      login(pendingPhone);
+      renderProfile();
+      show('profile', '#profile-title');
+      toast('Вы вошли. Сессия сохранится на 30 дней');
+    });
+
+    // --- Profile ----------------------------------------------------------
+    const nameForm = root.querySelector<HTMLFormElement>('[data-name-form]')!;
+    const nameInput = root.querySelector<HTMLInputElement>('#profile-name')!;
+    const editBtn = root.querySelector<HTMLButtonElement>('[data-edit-name]')!;
+
+    function renderProfile(): void {
+      const profile = currentProfile();
+      const session = getSession();
+      if (!profile || !session) return;
+      const name = profile.name.trim();
+      root!.querySelector('[data-name-view]')!.textContent = name || 'Гость «Пенки»';
+      root!.querySelector('[data-avatar]')!.textContent = (name[0] ?? 'П').toUpperCase();
+      root!.querySelector('[data-phone-view]')!.textContent = formatPhone(profile.phone);
+      root!.querySelector('[data-bonus]')!.textContent = `${profile.bonus} ${plural(profile.bonus, ['бонус', 'бонуса', 'бонусов'])}`;
+      editBtn.setAttribute('aria-label', name ? 'Изменить имя' : 'Указать имя');
+      const until = new Date(session.issuedAt + SESSION_MAX_AGE * 1000);
+      root!.querySelector('[data-session-info]')!.textContent = `Вход сохранён до ${until.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })} — даже после перезапуска браузера.`;
+      renderHistory();
+    }
+
+    function renderHistory(): void {
+      const orders = getOrders();
+      const list = root!.querySelector<HTMLUListElement>('[data-history]')!;
+      root!.querySelector<HTMLElement>('[data-history-empty]')!.hidden = orders.length > 0;
+      list.replaceChildren(
+        ...orders.map((o) => {
+          const li = document.createElement('li');
+          li.className = 'card p-4';
+          const head = document.createElement('div');
+          head.className = 'flex items-start justify-between gap-3';
+          const title = document.createElement('div');
+          const num = document.createElement('p');
+          num.className = 'font-bold';
+          num.textContent = `Заказ № ${o.number}`;
+          const meta = document.createElement('p');
+          meta.className = 'text-sm text-muted';
+          meta.textContent = `${formatDayTime(o.readyAt)} · ${places[o.locationSlug] ?? 'Пенка'}`;
+          title.append(num, meta);
+          const total = document.createElement('p');
+          total.className = 'shrink-0 font-extrabold tabular-nums';
+          total.textContent = formatPrice(o.total);
+          head.append(title, total);
+
+          const items = document.createElement('p');
+          items.className = 'mt-2 text-sm';
+          items.textContent = o.lines.map((l) => (l.qty > 1 ? `${l.name} × ${l.qty}` : l.name)).join(', ');
+
+          const repeat = document.createElement('button');
+          repeat.type = 'button';
+          repeat.className = 'btn btn-ghost btn-sm mt-3';
+          repeat.textContent = 'Повторить заказ';
+          repeat.setAttribute('aria-label', `Повторить заказ № ${o.number}`);
+          repeat.addEventListener('click', () => {
+            for (const { qty, ...line } of o.lines) addToCart(line, qty);
+            toast('Добавили в корзину');
+            setTimeout(() => {
+              location.href = root!.dataset.cartUrl ?? '';
+            }, 600);
+          });
+          li.append(head, items, repeat);
+          return li;
+        }),
+      );
+    }
+
+    editBtn.addEventListener('click', () => {
+      nameInput.value = currentProfile()?.name ?? '';
+      nameForm.hidden = false;
+      nameInput.focus();
+    });
+    root.querySelector('[data-cancel-name]')!.addEventListener('click', () => {
+      nameForm.hidden = true;
+      setError(nameInput, '');
+      editBtn.focus();
+    });
+    nameForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const value = nameInput.value.trim();
+      if (value.length < 2) {
+        setError(nameInput, 'Минимум 2 символа');
+        nameInput.focus();
+        return;
+      }
+      const profile = currentProfile();
+      if (profile) saveProfile({ ...profile, name: value });
+      setError(nameInput, '');
+      nameForm.hidden = true;
+      renderProfile();
+      editBtn.focus();
+      toast('Имя сохранено');
+    });
+
+    root.querySelector('[data-logout]')!.addEventListener('click', () => {
+      logout();
+      phoneInput.value = '';
+      show('phone', '#login-phone');
+      toast('Вы вышли из профиля');
+    });
+
+    // --- Initial state ----------------------------------------------------
+    if (getSession()) {
+      renderProfile();
+      show('profile');
+    } else {
+      show('phone');
+    }
+  }
+</script>

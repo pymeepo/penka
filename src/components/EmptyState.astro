@@ -1,0 +1,36 @@
+---
+// Friendly empty state with the brand mark.
+import Mark from '../assets/brand/mark.svg';
+
+interface Props {
+  title: string;
+  text?: string;
+  class?: string;
+}
+
+const { title, text, class: className } = Astro.props;
+---
+
+<div class:list={['flex flex-col items-center px-6 py-12 text-center', className]}>
+  <div class="relative mb-6">
+    <span class="absolute -inset-6 rounded-full bg-caramel-soft" aria-hidden="true"></span>
+    <span class="absolute -right-3 -bottom-1 size-10 rounded-full bg-sage-soft" aria-hidden="true"></span>
+    <Mark class="empty-mark relative size-24 text-ink" aria-hidden="true" />
+  </div>
+  <h2 class="text-2xl">{title}</h2>
+  {text && <p class="mt-2 max-w-sm text-muted">{text}</p>}
+  <div class="mt-6 flex flex-wrap justify-center gap-3">
+    <slot />
+  </div>
+</div>
+
+<style>
+  .empty-mark {
+    animation: float 4s ease-in-out infinite;
+  }
+  @keyframes float {
+    50% {
+      transform: translateY(-6px) rotate(-3deg);
+    }
+  }
+</style>
