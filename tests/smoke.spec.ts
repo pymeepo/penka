@@ -95,3 +95,24 @@ test('manifest is valid', async ({ request }) => {
   expect(manifest.icons.map((i) => i.sizes)).toEqual(expect.arrayContaining(['192x192', '512x512']));
   for (const icon of manifest.icons) expect((await request.get(icon.src)).status()).toBe(200);
 });
+
+test('app-config.json lists working URLs', async ({ request }) => {
+  const res = await request.get('app-config.json');
+  expect(res.status()).toBe(200);
+  const config = (await res.json()) as {
+    site: string;
+    tabs: Array<{ url: string }>;
+    promos: Array<{ url: string }>;
+    pages: Record<string, string>;
+    cart: { url: string };
+  };
+  expect(config.tabs).toHaveLength(5);
+  expect(config.promos.length).toBeGreaterThan(0);
+  const urls = [...config.tabs.map((t) => t.url), ...config.promos.map((p) => p.url), config.cart.url, ...Object.values(config.pages)];
+  for (const url of urls) {
+    expect(url.startsWith(config.site)).toBe(true);
+    // Production URLs → check the same path on the local preview.
+    const path = new URL(url).pathname.replace(new URL(config.site).pathname, '');
+    expect((await request.get(path)).status(), path).toBe(200);
+  }
+});

@@ -26,6 +26,7 @@
 - `npm run build` — PDF-меню (`npm run pdf`) + `astro check` + сборка в `dist/`
 - `npm run pdf` — `public/files/menu.pdf` из `src/data` (pdf-lib, WOFF-шрифты fontsource по подмножествам; не коммитится)
 - `npm run preview` — просмотр сборки
+- `npm run preview-image` — `docs/preview.jpg` для README из `screenshots/` (после `npm test`)
 - `npm run assets` — логотип (SVG/PNG), иконки PWA, OG-картинка, заглушки для недостающих фото (`scripts/`).
   Логотип рисуется кодом в `scripts/lib/brand.ts`; PNG для приложения — в `brand/`.
 - `npm run test` — Playwright (Pixel 7) против собранного сайта (`astro preview` на :4322): смоук всех страниц,
@@ -68,6 +69,12 @@
 - Lighthouse mobile: Performance ≥ 90; Accessibility, Best Practices, SEO ≥ 95.
 - Title, description, Open Graph на каждой странице; PWA-манифест; `meta theme-color`.
 - Playwright: все страницы открываются в мобильном вьюпорте без ошибок в консоли.
+
+### Приложение и деплой
+- `/app-config.json` (`src/pages/app-config.json.ts`) — вкладки, акции для пушей, контракт моста; собирается из `src/data`.
+  При добавлении страниц-возможностей — дописать туда и в README.
+- Деплой: `.github/workflows/deploy.yml` (withastro/action, push в `main`); тесты — `ci.yml`, деплой не блокируют.
+  Версии actions сверять с тегами репозиториев (`git ls-remote --tags`).
 
 ### Подводные камни
 - Дев-сервер Tailwind 4 не всегда подхватывает классы из новых страниц — после добавления страницы

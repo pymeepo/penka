@@ -17,7 +17,8 @@
     "assets": "tsx scripts/build-brand.ts && tsx scripts/placeholders.ts",
     "astro": "astro",
     "test": "playwright test",
-    "lighthouse": "tsx scripts/lighthouse.ts"
+    "lighthouse": "tsx scripts/lighthouse.ts",
+    "preview-image": "tsx scripts/readme-preview.ts"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.3.0",
